@@ -1,0 +1,59 @@
+<header id="bull_navbar">
+  <a href="/" style="font-size: 200%; margin-left: .5em">🐮</a>
+  <div>
+    <a href="/"><h1>bull</h1></a>
+    <nav id="bull_desktopnav">
+      <ul>
+	
+	<li><a href="{{ .Page.URLPath }}"
+	       {{ if (and (.Page.AvailableAt .RequestPath)
+	                  (not (eq .Page.PageName "_bull/mostrecent"))) }}
+	       class="active"
+	       {{ end }}
+	       >View page</a></li>
+	{{ if (and (not .Page.IsGenerated) (not .ReadOnly)) }}
+	<li><a href="/_bull/edit{{ .Page.URLPath }}"
+	       {{ if (hasPrefix .RequestPath "/_bull/edit/") }}
+	       class="active"
+	       {{ end }}
+	       >Edit page</a></li>
+	{{ else }}
+	<li>Edit page</li>
+	{{ end }}
+	<li><a href="/_bull/mostrecent"
+	       {{ if (eq .Page.PageName "_bull/mostrecent") }}
+	       class="active"
+	       {{ end }}
+	       >Most recent</a></li>
+
+      </ul>
+    </nav>
+    <nav id="bull_mobilenav">
+      <ul>
+	
+	<li><a href="{{ .Page.URLPath }}"
+	       {{ if (and (.Page.AvailableAt .RequestPath)
+	                  (not (eq .Page.PageName "_bull/mostrecent"))) }}
+	       class="active"
+	       {{ end }}
+	       >View</a></li>
+	{{ if (and (not .Page.IsGenerated) (not .ReadOnly)) }}
+	<li><a href="/_bull/edit{{ .Page.URLPath }}"
+	       {{ if (hasPrefix .RequestPath "/_bull/edit/") }}
+	       class="active"
+	       {{ end }}
+	       >Edit</a></li>
+	{{ else }}
+	<li>Edit page</li>
+	{{ end }}
+	<li><a href="/_bull/mostrecent"
+	       {{ if (eq .Page.PageName "_bull/mostrecent") }}
+	       class="active"
+	       {{ end }}
+	       >Recent</a></li>
+
+      </ul>
+
+    </nav>
+  </div>
+</header>

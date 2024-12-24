@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+{{ template "head.html.tmpl" . }}
+<body>
+  {{ template "nav.html.tmpl" . }}
+  <main>
+    <div>
+      {{ if (ne .Page.PageName "") }}
+      <h1 class="bull_title">{{ .Page.PageName }}</h1>
+      {{ template "lastupdate.html.tmpl" . }}
+      {{ end }}
+
+      <div class="Artikel" id="content">
+
+	{{ .Content }}
+
+      </div>
+
+    </div>
+  </main>
+
+  <script type="text/javascript">
+    var u = new URL(document.URL);
+    var updates = new EventSource('/_bull/watch' + u.pathname);
+    window.onbeforeunload = function() { updates.close(); };
+    updates.onmessage = function(e) {
+	//const update = JSON.parse(e.data)
+	console.log('page changed:', e.data);
+	location.reload();
+    }
+  </script>
+
+</body>
+</html>

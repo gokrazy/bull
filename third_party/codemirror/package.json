@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@codemirror/lang-markdown": "github:codemirror/lang-markdown",
+    "codemirror": "^6.0.1"
+  }
+}
