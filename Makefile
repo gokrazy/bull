@@ -5,8 +5,10 @@ all: test
 test:
 	CGO_ENABLED=0 go test -fullpath ./...
 
-run: test
+install:
 	CGO_ENABLED=0 go install ./cmd/bull
+
+run: test install
 	sh -c ' \
 	bull -bull_static=internal/html/ & \
 	bull -bull_static=internal/html/ -content=$$HOME/hugo/content -listen=localhost:4444 & \
