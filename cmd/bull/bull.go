@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"runtime/debug"
 	"time"
 
@@ -83,6 +84,13 @@ func runbull() error {
 		return err
 	}
 
+	// Best effort check: does not correctly identify whether the content
+	// directory and home directory are truly identical, just checks
+	// whether their names are the same.
+	if filepath.Clean(content.Name()) == filepath.Clean(os.Getenv("HOME")) {
+		log.Printf("WARNING: You are running bull in your home directory, which may contain many files. You might want to start bull in a smaller directory of markdown files (or set the -content flag).")
+	}
+
 	if _, err := content.Stat("_bull"); err == nil {
 		log.Printf("NOTE: your _bull directory in %q will be shadowed by bull-internal handlers", *contentDir)
 	}
@@ -100,10 +108,13 @@ func runbull() error {
 	// TODO: index in the background, print how long it took when done
 	// TODO: deal with permission denied errors.
 	// add a test that ensures bull starts up even when files cannot be read
+	start := time.Now()
+	log.Printf("indexing all pages (markdown files) in %s (for backlinks)", content.Name())
 	idx, err := index(content)
 	if err != nil {
 		return err
 	}
+	log.Printf("indexed %d pages in %.2fs", len(idx.backlinks), time.Since(start).Seconds())
 
 	bull := &bull{
 		content:    content,
