@@ -6,9 +6,15 @@
 
 ## installation
 
-If you want to use bull without modifying its source:
+If you want to use bull without modifying its source, [install Go 1.21 or
+newer](https://go.dev/dl) and run:
 
     go install github.com/gokrazy/bull/cmd/bull@latest
+
+(bull needs Go 1.24rc1 or newer for its [os.Root
+type](https://pkg.go.dev/os@go1.24rc1#Root), but Go 1.21 [introduced forward
+compatibility](https://go.dev/blog/toolchain) in the form of toolchain
+management.)
 
 **Tip:** When deploying bull to other systems, I recommend building with the
 `CGO_ENABLED=0` environment variable, which will result in a statically linked
