@@ -6,7 +6,24 @@
 
 ## installation
 
+If you want to use bull without modifying its source:
+
     go install github.com/gokrazy/bull/cmd/bull@latest
+
+**Tip:** When deploying bull to other systems, I recommend building with the
+`CGO_ENABLED=0` environment variable, which will result in a statically linked
+binary program without dependencies on the system libc. That makes it easy to,
+for example, build on Arch Linux and deploy on Debian stable.
+
+### installation for development
+
+To make changes to the bull code, clone the git repository:
+
+    git clone https://github.com/gokrazy/bull
+
+Then, change into the newly created bull directory and run:
+
+    go install ./cmd/bull
 
 ## details
 
