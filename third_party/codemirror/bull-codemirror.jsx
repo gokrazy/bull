@@ -3,12 +3,56 @@
 // npm install codemirror
 // npm install codemirror/lang-markdown
 
-import {EditorView, basicSetup} from "codemirror"
+import {EditorView} from "codemirror"
 import {markdown} from "@codemirror/lang-markdown"
+
+import {keymap, highlightSpecialChars, drawSelection, highlightActiveLine, dropCursor,
+        rectangularSelection, crosshairCursor,
+        lineNumbers, highlightActiveLineGutter} from "@codemirror/view"
+import {Extension, EditorState} from "@codemirror/state"
+import {defaultHighlightStyle, syntaxHighlighting, indentOnInput, bracketMatching,
+        foldGutter, foldKeymap} from "@codemirror/language"
+import {defaultKeymap, history, historyKeymap} from "@codemirror/commands"
+import {searchKeymap, highlightSelectionMatches} from "@codemirror/search"
+import {lintKeymap} from "@codemirror/lint"
+
+let bullSetup = [
+    lineNumbers(),
+    highlightActiveLineGutter(),
+    highlightSpecialChars(),
+    history(),
+    foldGutter(),
+    drawSelection(),
+    dropCursor(),
+    EditorState.allowMultipleSelections.of(true),
+    indentOnInput(),
+    syntaxHighlighting(defaultHighlightStyle, {fallback: true}),
+    bracketMatching(),
+
+    // I do not like this behavior.
+    // closeBrackets(),
+
+    // The autocompletion extension installs an alt+p / alt+z
+    // keyboard shortcut, which prevents me from entering
+    // ~ or ` when using neo-layout.org.
+    // autocompletion(),
+
+    rectangularSelection(),
+    crosshairCursor(),
+    highlightActiveLine(),
+    highlightSelectionMatches(),
+    keymap.of([
+	...defaultKeymap,
+	...searchKeymap,
+	...historyKeymap,
+	...foldKeymap,
+	...lintKeymap
+    ]),
+]
 
 let editor = new EditorView({
     doc: BullMarkdown,
-    extensions: [ basicSetup, markdown() ],
+    extensions: [ bullSetup, markdown() ],
     parent: document.getElementById('cm-goes-here')
 })
 
