@@ -6,6 +6,7 @@ require (
 	github.com/yuin/goldmark v1.7.8
 	go.abhg.dev/goldmark/wikilink v0.5.0
 	golang.org/x/image v0.23.0
+	golang.org/x/sync v0.10.0
 )
 
 require (

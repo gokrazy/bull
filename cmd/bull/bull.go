@@ -114,7 +114,7 @@ func runbull() error {
 	if err != nil {
 		return err
 	}
-	log.Printf("indexed %d pages in %.2fs", len(idx.backlinks), time.Since(start).Seconds())
+	log.Printf("discovered in %.2fs: directories: %d, pages: %d, links: %d", time.Since(start).Seconds(), idx.dirs, idx.pages, len(idx.backlinks))
 
 	bull := &bull{
 		content:    content,
