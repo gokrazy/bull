@@ -66,7 +66,6 @@ bull uses the yuin/goldmark markdown renderer, specifically:
   * you can leave a favicon.ico in your content directory
 * handle front matter better (ignore? format differently?), e.g. [[untagged/prober7]]
 * make each heading foldable
-* codemirror: enable line breaks (instead of scrolling)
 * edit: move save button to top
 * mostrecent: use parallel walk
 * mostrecent: paginate to make the page manageable for large gardens

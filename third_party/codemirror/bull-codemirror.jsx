@@ -52,7 +52,11 @@ let bullSetup = [
 
 let editor = new EditorView({
     doc: BullMarkdown,
-    extensions: [ bullSetup, markdown() ],
+    extensions: [
+	bullSetup,
+	markdown(),
+	EditorView.lineWrapping
+    ],
     parent: document.getElementById('cm-goes-here')
 })
 
