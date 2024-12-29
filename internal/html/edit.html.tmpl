@@ -2,7 +2,7 @@
 {{ template "head.html.tmpl" . }}
 <body>
   {{ template "nav.html.tmpl" . }}
-  <main>
+  <main class="bull_edit">
     <div>
       {{ if .Page.ModTime.IsZero }}
       <h1 class="bull_title">Create page "{{ .Page.PageName }}"</h1>
@@ -11,16 +11,16 @@
       {{ template "lastupdate.html.tmpl" . }}
       {{ end }}
 
-      <div class="bull_page">
+      <div class="bull_edit">
 
 	<!-- TODO: implement -editor=textarea -->
-	
-	<div id="cm-goes-here"></div>
 
 	<form action="/_bull/save/{{ .Page.PageName }}" method="post">
 	  <input type="hidden" id="bull-markdown" name="markdown">
 	  <input type="submit" id="bull-save" value="save page">
 	</form>
+
+	<div id="cm-goes-here"></div>
 
       </div>
 
