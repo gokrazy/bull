@@ -25,31 +25,11 @@
       font-display: block;
   }
 
-  /* https://css-tricks.com/box-sizing/ */
-  html {
-      box-sizing: border-box;
-  }
+  /* TODO: scroll-padding-top? */
 
-  *, *:before, *:after {
-      box-sizing: inherit;
-  }
-
-  /* https://css-tricks.com/reset-all-margins-padding/ */
   * {
       margin: 0;
       padding: 0;
-  }
-
-  html {
-      display: grid;
-      height: 100%;
-  }
-
-  body {
-      display: grid;
-      grid-template-rows: auto 1fr;
-      height: 100vh;
-      min-height: 0;
   }
 
   /* fonts */
@@ -76,9 +56,8 @@
   h5 { font-size: 1.0rem; }
   h6 { font-size: 0.8rem; }
 
-  #cm-goes-here {
+  body {
       overflow-y: scroll;
-      height: 100%;
   }
   
   pre, code, .cm-content {
@@ -97,7 +76,7 @@
       overflow-x: auto;
       font-size: 0.9rem;
       padding: .6rem 1rem;
-      margin: .75rem 1rem .75rem 0;
+      margin: .75rem 0;
   }
 
   /* TODO: try using less opacity in nested lists */
@@ -123,8 +102,7 @@
       margin-bottom: .75rem;
   }
 
-  .bull_page p,
-  .bull_edit p {
+  .bull_page p {
       margin-top: .5rem;
       margin-bottom: .5rem;
   }
@@ -184,65 +162,26 @@
 
   /* layout */
 
-  main {
-      min-width: 100vw;
-      max-width: 100vw;
-      overflow-y: auto;
-  }
-
-  main.bull_edit>div:first-child {
-      max-width: 45rem;
-  }
-
-  main>div:first-child {
-      outline: none !important;
-      padding: 1rem;
-      padding-bottom: 0;
-      display: grid;
-      grid-template-rows: auto auto 1fr;
-      overflow: auto scroll;
-  }
-
-  .bull_page {
-      max-width: 45rem;
-  }
-
-  .bull_pagewrapper {
-      max-width: 45rem;
-      margin: 0 auto;
-  }
-
-  main.bull_edit>div:first-child {
-      overflow: auto;
-      margin: 0 auto;
-  }
-
-  div.bull_edit {
-      overflow: auto;
-  }
-
-  div.bull_edit {
-      display: grid;
-      grid-template-rows: auto 1fr;
-  }
-
   .bull_lastupdate {
       opacity: .5;
       font-size: .9rem;
       margin-bottom: 1rem;
   }
   
-  #bull_navbar, main {
+  #bull_navbar, #bull_footer, main {
       max-width: 45rem;
-      margin: 0 auto;
+      margin: auto;
   }
   
   #bull_navbar {
       display: grid;
-      grid-template-columns: calc(2rem + 44px) auto;
+      grid-template-columns: calc(2rem + 44px) auto auto;
       align-items: center;
       padding: .25rem 0;
+      position: sticky;
+      top: 0;
       background-color: #fff;
+      z-index: 1;
   }
 
   #bull_navbar a:link,
@@ -259,6 +198,12 @@
       margin-right: 1.85rem;
   }
 
+  main>div:first-child {
+      max-width: 45rem;
+      padding: 1rem;
+  }
+
+
   main hr {
       margin: 2rem 20rem;
       border: 0;
@@ -272,24 +217,12 @@
 	  padding-top: .5rem;
       }
 
-      .bull_pagewrapper,
-      .bull_pagewrapper_gen {
-	  max-width: calc(45rem + 13rem);
-	  min-width: calc(45rem + 13rem);
-      }
-
-      main.bull_edit>div:first-child {
-	  max-width: calc(45rem + 13rem);
-      }
-
-      #bull_navbar {
-	  min-width: calc(45rem + 13rem);
+      #bull_navbar, #bull_footer, main {
 	  max-width: calc(45rem + 13rem);
       }
 
       main {
-	  display: grid;
-	  grid-template-rows: 1fr;
+	  display: flex;
       }
 
       #bull_desktopnav {

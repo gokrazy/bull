@@ -2,7 +2,7 @@
 {{ template "head.html.tmpl" . }}
 <body>
   {{ template "nav.html.tmpl" . }}
-  <main class="bull_edit">
+  <main>
     <div>
       {{ if .Page.ModTime.IsZero }}
       <h1 class="bull_title">Create page "{{ .Page.PageName }}"</h1>
@@ -11,7 +11,7 @@
       {{ template "lastupdate.html.tmpl" . }}
       {{ end }}
 
-      <div class="bull_edit">
+      <div class="bull_page">
 
 	<!-- TODO: implement -editor=textarea -->
 

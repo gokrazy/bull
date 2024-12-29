@@ -3,21 +3,16 @@
 <body>
   {{ template "nav.html.tmpl" . }}
   <main>
-    <div id="bull_wrap0">
-      <div class="bull_pagewrapper {{ if .Page.IsGenerated }}bull_pagewrapper_gen{{ end }}">
-
+    <div>
 	{{ if .Page.Exists }}
 	<h1 class="bull_title">{{ .Page.PageName }}</h1>
 	{{ template "lastupdate.html.tmpl" . }}
 	{{ end }}
 
-	<div class="bull_page" autofocus="autofocus">
+	{{ .Content }}
 
-	  {{ .Content }}
+      </div>
 
-	</div>
-
-      </div> <!-- bull_pagewrapper -->
     </div>
   </main>
 
@@ -30,11 +25,6 @@
 	console.log('page changed:', e.data);
 	location.reload();
     }
-    /* Our <body> is not scrollable, so we need to set focus
-       on the first scrollable element manually, otherwise pressing
-       the down/up arrow keys after pageload does not work. */
-    document.getElementById('bull_wrap0').tabIndex = '-1';
-    document.getElementById('bull_wrap0').focus();
   </script>
 
 </body>
