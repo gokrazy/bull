@@ -35,8 +35,7 @@ func (p *page) IsGenerated() bool {
 }
 
 func (p *page) URLPath() string {
-	u := url.URL{Path: p.PageName}
-	return "/" + u.String()
+	return "/" + url.PathEscape(p.PageName)
 }
 
 var homeDir = os.Getenv("HOME")
