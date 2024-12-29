@@ -10,8 +10,8 @@ install: test
 
 run: install
 	sh -c ' \
-	bull -bull_static=internal/html/ & \
-	bull -bull_static=internal/html/ -content=$$HOME/hugo/content -listen=localhost:4444 & \
-	bull -bull_static=internal/html/ -content=$$HOME/keep -listen=localhost:5555 -editor=textarea & \
+	bull serve -bull_static=internal/html/ & \
+	bull -content=$$HOME/hugo/content serve -bull_static=internal/html/ -listen=localhost:4444 & \
+	bull -content ~/keep serve -bull_static=internal/html/ -listen=localhost:5555 -editor=textarea & \
 	wait \
 	'

@@ -1,24 +1,15 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"io"
 	"log"
-	"net"
-	"net/http"
 	"os"
-	"path/filepath"
 	"runtime/debug"
-	"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/gokrazy/bull"
-	thirdparty "github.com/gokrazy/bull/third_party"
-	"golang.org/x/image/font/gofont/gobold"
-	"golang.org/x/image/font/gofont/gomono"
-	"golang.org/x/image/font/gofont/goregular"
 )
 
 const (
@@ -35,13 +26,6 @@ func defaultContentDir() string {
 	// That still means “current working directory”,
 	// we just have no name to display to the user.
 	return dir
-}
-
-func defaultEditor() string {
-	if len(thirdparty.BullCodemirror) > 0 {
-		return "codemirror"
-	}
-	return "textarea"
 }
 
 func loadContentSettings(content *os.Root) (bull.ContentSettings, error) {
@@ -68,137 +52,76 @@ func loadContentSettings(content *os.Root) (bull.ContentSettings, error) {
 	return cs, nil
 }
 
+var (
+	contentDir = flag.String("content",
+		defaultContentDir(),
+		"content directory. bull considers each markdown file in this directory a page and will only serve files from this directory")
+)
+
+func usage(fset *flag.FlagSet, help string) func() {
+	return func() {
+		fmt.Fprintf(fset.Output(), "%s", help)
+		fmt.Fprintf(fset.Output(), "\nCommand-line flags:\n")
+		fset.PrintDefaults()
+		fmt.Fprintf(fset.Output(), "\n(See bull -help for global command-line flags.)\n")
+	}
+}
+
 func runbull() error {
 	info, ok := debug.ReadBuildInfo()
 	mainVersion := info.Main.Version
 	if !ok {
 		mainVersion = "<runtime/debug.ReadBuildInfo failed>"
 	}
-	log.Printf("github.com/gokrazy/bull %s", mainVersion)
-
-	listenAddr := flag.String("listen",
-		"localhost:3333",
-		"[host]:port listen address")
-
-	contentDir := flag.String("content",
-		defaultContentDir(),
-		"content directory. bull considers each markdown file in this directory a page and will only serve files from this directory")
-
-	bullStatic := flag.String("bull_static",
-		"",
-		"if non-empty, path to the bull static assets directory (useful when developing bull)")
-
-	editor := flag.String("editor",
-		defaultEditor(),
-		"if empty, editing files is disabled (read-only mode). one of 'textarea' (HTML textarea) or 'codemirror' (CodeMirror JavaScript editor)")
+	fmt.Printf("github.com/gokrazy/bull %s\n", mainVersion)
 
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "\n")
-		fmt.Fprintf(os.Stderr, "bull is a minimalistic bullet journaling software.\n")
-		fmt.Fprintf(os.Stderr, "\n")
-		fmt.Fprintf(os.Stderr, "Examples:\n")
-		fmt.Fprintf(os.Stderr, "  %s                         # serve the current directory\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "  %s -content=$HOME/keep     # serve ~/keep\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "  %s -listen=100.5.23.42:80  # serve on a Tailscale VPN IP\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "\n")
-		fmt.Fprintf(os.Stderr, "Command-line flags:\n")
+		os.Stderr.Write([]byte(`
+bull is a minimalistic bullet journaling software.
+
+Syntax: bull [global flags] <verb> [flags] [args]
+
+To get help on any verb, use bull <verb> -help or bull help <verb>.
+
+If no verb is specified, bull will default to 'serve'.
+
+Verbs:
+  serve  - serve markdown pages
+
+Examples:
+  % bull                               # serve the current directory
+  % bull -content ~/keep serve         # serve ~/keep
+  % bull serve -listen=100.5.23.42:80  # serve on a Tailscale VPN IP
+
+Command-line flags:
+`))
 		flag.PrintDefaults()
 	}
 	flag.Parse()
 
-	content, err := os.OpenRoot(*contentDir)
-	if err != nil {
-		return err
+	args := flag.Args()
+	if len(args) == 0 {
+		// no args? default to 'serve' verb
+		args = []string{"serve"}
 	}
-
-	// Best effort check: does not correctly identify whether the content
-	// directory and home directory are truly identical, just checks
-	// whether their names are the same.
-	if filepath.Clean(content.Name()) == filepath.Clean(os.Getenv("HOME")) {
-		log.Printf("WARNING: You are running bull in your home directory, which may contain many files. You might want to start bull in a smaller directory of markdown files (or set the -content flag).")
-	}
-
-	if _, err := content.Stat("_bull"); err == nil {
-		log.Printf("NOTE: your _bull directory in %q will not be served; it will be shadowed by bull-internal handlers", *contentDir)
-	}
-
-	cs, err := loadContentSettings(content)
-	if err != nil {
-		return err
-	}
-
-	var static *os.Root
-	if *bullStatic != "" {
-		var err error
-		static, err = os.OpenRoot(*bullStatic)
-		if err != nil {
-			return err
+	verb, args := args[0], args[1:]
+	if verb == "help" {
+		// Turn bull help <verb> into bull <verb> -help
+		if len(args) == 0 {
+			flag.Usage()
+			os.Exit(2)
 		}
+		verb = args[0]
+		args = []string{"-help"}
 	}
-
-	bull := &bullServer{
-		content:         content,
-		contentDir:      *contentDir,
-		contentSettings: cs,
-		static:          static,
-		editor:          *editor,
+	switch verb {
+	case "serve":
+		return serve(args)
 	}
-	if err := bull.init(); err != nil {
-		return err
-	}
-
-	// index for backlinks
-	// TODO: index in the background, print how long it took when done
-	// TODO: deal with permission denied errors.
-	// add a test that ensures bull starts up even when files cannot be read
-	start := time.Now()
-	log.Printf("indexing all pages (markdown files) in %s (for backlinks)", content.Name())
-	idx, err := bull.index()
-	if err != nil {
-		return err
-	}
-	bull.idx = idx
-	log.Printf("discovered in %.2fs: directories: %d, pages: %d, links: %d", time.Since(start).Seconds(), idx.dirs, idx.pages, len(idx.backlinks))
-
-	// TODO: serve a default favicon if there is none in the content directory
-
-	// TODO: should the program work at non-rooted URLs?
-	http.Handle("/{page...}", handleError(bull.handleRender))
-	http.Handle(bullURLPrefix+"edit/{page...}", handleError(bull.edit))
-
-	var zeroModTime time.Time
-	for _, variant := range []struct {
-		name    string
-		content []byte
-	}{
-		{"regular", goregular.TTF},
-		{"bold", gobold.TTF},
-		{"mono", gomono.TTF},
-	} {
-		basename := "go" + variant.name + ".ttf"
-		http.HandleFunc(bullURLPrefix+"gofont/"+basename, func(w http.ResponseWriter, r *http.Request) {
-			http.ServeContent(w, r, basename, zeroModTime, bytes.NewReader(variant.content))
-		})
-	}
-	{
-		basename := "bull-codemirror.bundle.js"
-		http.HandleFunc(bullURLPrefix+"js/"+basename,
-			func(w http.ResponseWriter, r *http.Request) {
-				http.ServeContent(w, r, basename, zeroModTime, bytes.NewReader(thirdparty.BullCodemirror))
-			})
-	}
-	http.Handle(bullURLPrefix+"mostrecent", handleError(bull.mostrecent))
-	http.Handle(bullURLPrefix+"buildinfo", handleError(bull.buildinfo))
-	http.Handle(bullURLPrefix+"watch/{page...}", handleError(bull.watch))
-	http.Handle(bullURLPrefix+"save/{page...}", handleError(bull.save))
-
-	ln, err := net.Listen("tcp", *listenAddr)
-	if err != nil {
-		return err
-	}
-	log.Printf("serving content from %q on %s", *contentDir, ln.Addr())
-	log.Printf("ready! now open %s", urlForListener(ln))
-	return http.Serve(ln, nil)
+	fmt.Fprintf(os.Stderr, "unknown verb %q\n", verb)
+	flag.Usage()
+	os.Exit(2)
+	return nil
 }
 
 func main() {
