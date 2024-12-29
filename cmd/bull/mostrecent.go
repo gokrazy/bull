@@ -3,39 +3,32 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io/fs"
 	"net/http"
 	"sort"
+	"sync"
 )
 
 func (b *bullServer) mostrecent(w http.ResponseWriter, r *http.Request) error {
 	// walk the entire content directory
-	var pages []*page
-	err := fs.WalkDir(b.content.FS(), ".", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
+	i := newIndexer(b.content)
+	i.readModTime = true // required for sorting by most recent
+	var (
+		pages []page
+		readg sync.WaitGroup
+	)
+	readg.Add(1)
+	// one reading goroutine is sufficient, we only collect metadata
+	go func() {
+		defer readg.Done()
+		for pg := range i.readq {
+			pages = append(pages, pg)
 		}
-
-		if d.IsDir() || !isMarkdown(path) {
-			return nil
-		}
-
-		// save path and modtime for sorting
-		info, err := d.Info()
-		if err != nil {
-			return err
-		}
-		pages = append(pages, &page{
-			PageName: file2page(path),
-			FileName: path,
-			Content:  "", // intentionally left blank
-			ModTime:  info.ModTime(),
-		})
-		return nil
-	})
-	if err != nil {
+	}()
+	if err := i.walk(); err != nil {
 		return err
 	}
+	readg.Wait()
+
 	sort.Slice(pages, func(i, j int) bool {
 		return pages[i].ModTime.After(pages[j].ModTime)
 	})

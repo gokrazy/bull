@@ -49,11 +49,23 @@ func (b *bullServer) linkTargets(pg *page) ([]string, error) {
 }
 
 type indexer struct {
+	// config
 	contentRoot *os.Root
+	readModTime bool
+
+	// state
 	walkq       *queue
-	readq       chan string
+	readq       chan page
 	dirs, pages atomic.Uint64
 	pending     atomic.Int64
+}
+
+func newIndexer(content *os.Root) *indexer {
+	return &indexer{
+		contentRoot: content,
+		walkq:       newQueue(),
+		readq:       make(chan page),
+	}
 }
 
 func (i *indexer) dirDiscovered() {
@@ -90,24 +102,29 @@ func (i *indexer) walkN(dir string) error {
 			continue
 		}
 		i.pages.Add(1)
-		i.readq <- path.Join(dir, name)
+		fn := path.Join(dir, name)
+		pg := page{
+			PageName: file2page(fn),
+			FileName: fn,
+			// Content is empty; page not read yet
+			// ModTime is empty
+		}
+		if i.readModTime {
+			info, err := dirent.Info()
+			if err != nil {
+				return err
+			}
+			pg.ModTime = info.ModTime()
+		}
+		i.readq <- pg
 	}
 	return nil
 }
 
-func (b *bullServer) index() (*idx, error) {
-	i := &indexer{
-		contentRoot: b.content,
-		walkq:       newQueue(),
-		readq:       make(chan string),
-	}
+func (i *indexer) walk() error {
 	i.dirDiscovered()
 	i.walkq.Push(".")
 
-	var (
-		linksMu sync.Mutex
-		links   = make(map[string][]string)
-	)
 	ctx, canc := context.WithCancel(context.Background())
 	defer canc()
 	walkg, gctx := errgroup.WithContext(ctx)
@@ -139,13 +156,27 @@ func (b *bullServer) index() (*idx, error) {
 			return nil
 		})
 	}
-	var readg errgroup.Group
+	if err := walkg.Wait(); err != nil && !errors.Is(err, context.Canceled) {
+		return err
+	}
+	close(i.readq)
+	return nil
+}
+
+func (b *bullServer) index() (*idx, error) {
+	i := newIndexer(b.content)
+
+	var (
+		linksMu sync.Mutex
+		links   = make(map[string][]string)
+		readg   errgroup.Group
+	)
 	for range runtime.NumCPU() {
 		readg.Go(func() error {
 			linksN := make(map[string][]string)
-			for fn := range i.readq {
+			for pg := range i.readq {
 				// fmt.Printf("reading %s\n", fn)
-				pg, err := read(b.content, fn)
+				pg, err := read(b.content, pg.FileName)
 				if err != nil {
 					return err
 				}
@@ -161,10 +192,9 @@ func (b *bullServer) index() (*idx, error) {
 			return nil
 		})
 	}
-	if err := walkg.Wait(); err != nil && !errors.Is(err, context.Canceled) {
+	if err := i.walk(); err != nil {
 		return nil, err
 	}
-	close(i.readq)
 	if err := readg.Wait(); err != nil {
 		return nil, err
 	}
