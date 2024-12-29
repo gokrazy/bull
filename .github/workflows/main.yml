@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  diskimage:
+  tests:
     runs-on: ubuntu-latest
 
     steps:
