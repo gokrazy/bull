@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 
@@ -23,11 +24,13 @@ type resolver struct {
 }
 
 func (r *resolver) ResolveWikilink(n *wikilink.Node) (destination []byte, err error) {
-	possibilities := page2files(string(n.Target))
+	target := string(n.Target)
+	possibilities := page2files(target)
 	for _, fn := range possibilities {
 		_, err = read(r.contentRoot, fn)
 		if err == nil {
-			return append([]byte{'/'}, n.Target...), nil
+			// need to url-escape the path
+			return append([]byte{'/'}, []byte(url.PathEscape(target))...), nil
 		}
 	}
 	return nil, nil // do not link
