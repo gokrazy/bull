@@ -29,7 +29,7 @@ func (b *bullServer) mostrecent(w http.ResponseWriter, r *http.Request) error {
 	}
 	readg.Wait()
 
-	sort.Slice(pages, func(i, j int) bool {
+	sort.SliceStable(pages, func(i, j int) bool {
 		return pages[i].ModTime.After(pages[j].ModTime)
 	})
 	var buf bytes.Buffer
