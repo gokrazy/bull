@@ -6,7 +6,7 @@
     <div id="bull_wrap0">
       <div class="bull_pagewrapper {{ if .Page.IsGenerated }}bull_pagewrapper_gen{{ end }}">
 
-	{{ if (not .Page.Error) }}
+	{{ if .Page.Exists }}
 	<h1 class="bull_title">{{ .Page.PageName }}</h1>
 	{{ template "lastupdate.html.tmpl" . }}
 	{{ end }}

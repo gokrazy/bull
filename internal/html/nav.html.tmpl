@@ -16,7 +16,7 @@
 	       {{ if (hasPrefix .RequestPath "/_bull/edit/") }}
 	       class="active"
 	       {{ end }}
-	       >Edit page</a></li>
+	       >{{ if (not .Page.Exists) }}Create page{{ else }}Edit page{{ end }}</a></li>
 	{{ else }}
 	<li>Edit page</li>
 	{{ end }}

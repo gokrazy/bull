@@ -24,16 +24,13 @@ type resolver struct {
 }
 
 func (r *resolver) ResolveWikilink(n *wikilink.Node) (destination []byte, err error) {
-	target := string(n.Target)
-	possibilities := page2files(target)
-	for _, fn := range possibilities {
-		_, err = read(r.contentRoot, fn)
-		if err == nil {
-			// need to url-escape the path
-			return append([]byte{'/'}, []byte(url.PathEscape(target))...), nil
-		}
-	}
-	return nil, nil // do not link
+	// Wiki links (like [[target page name]]) are always resolved
+	// to their corresponding (escaped) URL, regardless of whether
+	// the page exists on disk or not.
+	//
+	// This allows creating pages by linking to them, following the link,
+	// then clicking Create page in the top menu bar.
+	return append([]byte{'/'}, []byte(url.PathEscape(string(n.Target)))...), nil
 }
 
 func (b *bullServer) converter() goldmark.Markdown {
@@ -139,6 +136,7 @@ func (b *bullServer) renderWithBacklinks(w http.ResponseWriter, r *http.Request,
 func (b *bullServer) renderBullMarkdown(w http.ResponseWriter, r *http.Request, basename string, buf bytes.Buffer) error {
 	pageName := bullPrefix + basename
 	pg := &page{
+		Exists:   true,
 		PageName: pageName,
 		FileName: page2desired(pageName),
 		Content:  buf.String(),

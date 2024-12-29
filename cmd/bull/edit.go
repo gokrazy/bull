@@ -20,6 +20,7 @@ func (b *bullServer) edit(w http.ResponseWriter, r *http.Request) error {
 			// the edit handler can be used to create a page.
 			pageName := pageFromURL(r)
 			pg = &page{
+				Exists:   false,
 				FileName: page2desired(pageName),
 				PageName: pageName,
 				Content:  "",          // file does not exist

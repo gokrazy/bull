@@ -16,7 +16,7 @@ import (
 // or generated on the fly by bull itself (those have a FileName
 // starting with _bull/).
 type page struct {
-	Error    bool   // whether this is an error page
+	Exists   bool   // whether the page exists on disk (false for error pages)
 	PageName string // relative to content directory, no .md suffix
 	FileName string // relative to content directory, with .md suffix
 	// Content is intentionally a string (immutable) instead of a []byte.
@@ -109,6 +109,7 @@ func read(contentRoot *os.Root, file string) (*page, error) {
 		return nil, err
 	}
 	return &page{
+		Exists:   true, // read from disk
 		PageName: file2page(file),
 		FileName: file,
 		Content:  string(b),

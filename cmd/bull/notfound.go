@@ -50,7 +50,7 @@ func (b *bullServer) renderNotFound(w http.ResponseWriter, r *http.Request) erro
 	}
 
 	pg := &page{
-		Error:    true,
+		Exists:   false,
 		FileName: page2desired(pageName),
 		PageName: pageName,
 		Content:  buf.String(),
