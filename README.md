@@ -67,7 +67,6 @@ bull uses the yuin/goldmark markdown renderer, specifically:
 * handle front matter better (ignore? format differently?), e.g. [[untagged/prober7]]
 * generate IDs for each heading
 * make each heading foldable
-* backlinks: do not list the same page multiple times ([[SETTINGS]])
 * codemirror: enable line breaks (instead of scrolling)
 * edit: move save button to top
 * mostrecent: use parallel walk
