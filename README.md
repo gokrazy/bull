@@ -68,9 +68,7 @@ bull uses the yuin/goldmark markdown renderer, specifically:
 * make each heading foldable
 * mostrecent: use parallel walk
 * mostrecent: paginate to make the page manageable for large gardens
-* mostrecent: fix absolute path to include content dir
 * content settings: make title_format configurable
-  * replace $HOME with ~ for shorter titles in tab bar
 
 ## why not just…?
 
