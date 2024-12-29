@@ -11,6 +11,7 @@ import (
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
+	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/renderer/html"
 	"github.com/yuin/goldmark/text"
@@ -35,6 +36,8 @@ func (r *resolver) ResolveWikilink(n *wikilink.Node) (destination []byte, err er
 func (b *bullServer) converter() goldmark.Markdown {
 	// TODO: Set up autolinking for bare URLs (like golang.org):
 	// https://github.com/yuin/goldmark/blob/master/README.md#linkify-extension
+	var parserOpts []parser.Option
+	parserOpts = append(parserOpts, parser.WithAutoHeadingID())
 	var rendererOpts []renderer.Option
 	if b.contentSettings.HardWraps {
 		// Turn newlines into <br>.
@@ -49,6 +52,7 @@ func (b *bullServer) converter() goldmark.Markdown {
 				},
 			},
 		),
+		goldmark.WithParserOptions(parserOpts...),
 		goldmark.WithRendererOptions(rendererOpts...),
 	)
 }
