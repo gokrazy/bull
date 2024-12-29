@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/fs"
 	"log"
+	"maps"
 	"os"
 	"path"
 	"runtime"
@@ -26,10 +27,10 @@ type idx struct {
 	backlinks map[string][]string
 }
 
-func linkTargets(contentRoot *os.Root, pg *page) ([]string, error) {
+func (b *bullServer) linkTargets(pg *page) ([]string, error) {
 	var targets []string
 
-	doc := renderMD(contentRoot, pg.Content)
+	doc := b.renderMD(pg.Content)
 	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if !entering {
 			return ast.WalkContinue, nil
@@ -94,9 +95,9 @@ func (i *indexer) walkN(dir string) error {
 	return nil
 }
 
-func index(contentRoot *os.Root) (*idx, error) {
+func (b *bullServer) index() (*idx, error) {
 	i := &indexer{
-		contentRoot: contentRoot,
+		contentRoot: b.content,
 		walkq:       newQueue(),
 		readq:       make(chan string),
 	}
@@ -144,11 +145,11 @@ func index(contentRoot *os.Root) (*idx, error) {
 			linksN := make(map[string][]string)
 			for fn := range i.readq {
 				// fmt.Printf("reading %s\n", fn)
-				pg, err := read(contentRoot, fn)
+				pg, err := read(b.content, fn)
 				if err != nil {
 					return err
 				}
-				targets, err := linkTargets(contentRoot, pg)
+				targets, err := b.linkTargets(pg)
 				if err != nil {
 					return err
 				}
@@ -156,9 +157,7 @@ func index(contentRoot *os.Root) (*idx, error) {
 			}
 			linksMu.Lock()
 			defer linksMu.Unlock()
-			for k, v := range linksN {
-				links[k] = v
-			}
+			maps.Copy(links, linksN)
 			return nil
 		})
 	}

@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func (b *bull) save(w http.ResponseWriter, r *http.Request) error {
+func (b *bullServer) save(w http.ResponseWriter, r *http.Request) error {
 	if b.editor == "" {
 		return httpError(http.StatusForbidden, fmt.Errorf("running in read-only mode (-editor= flag)"))
 	}

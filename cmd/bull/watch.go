@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func (b *bull) watch(w http.ResponseWriter, r *http.Request) error {
+func (b *bullServer) watch(w http.ResponseWriter, r *http.Request) error {
 	ctx := r.Context()
 
 	possibilities := filesFromURL(r)

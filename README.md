@@ -70,6 +70,9 @@ bull uses the yuin/goldmark markdown renderer, specifically:
 * backlinks: do not list the same page multiple times ([[SETTINGS]])
 * codemirror: enable line breaks (instead of scrolling)
 * edit: move save button to top
+* mostrecent: use parallel walk
+* mostrecent: paginate to make the page manageable for large gardens
+* content settings: make title_format configurable
 
 ## why not just…?
 

@@ -12,21 +12,23 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/gokrazy/bull"
 	"github.com/gokrazy/bull/internal/html"
 )
 
-type bull struct {
+type bullServer struct {
 	// content is a directory tree.
-	content    *os.Root
-	contentDir string   // only for <title>
-	static     *os.Root // static assets (for development)
-	idx        *idx
-	editor     string
+	content         *os.Root
+	contentDir      string // only for <title>
+	contentSettings bull.ContentSettings
+	static          *os.Root // static assets (for development)
+	idx             *idx
+	editor          string
 }
 
 // Initialize this bull server: ensure embedded templates can be parsed,
 // or (if -bull_static is not empty) specified directory contains assets.
-func (b *bull) init() error {
+func (b *bullServer) init() error {
 	if _, err := b.templates(); err != nil {
 		return err
 	}
@@ -43,14 +45,14 @@ var staticOnce = sync.OnceValues(func() (*template.Template, error) {
 	return tmplFromFS(html.FS)
 })
 
-func (b *bull) templates() (*template.Template, error) {
+func (b *bullServer) templates() (*template.Template, error) {
 	if b.static != nil {
 		return tmplFromFS(b.static.FS())
 	}
 	return staticOnce()
 }
 
-func (b *bull) executeTemplate(w http.ResponseWriter, basename string, tmpldata any) error {
+func (b *bullServer) executeTemplate(w http.ResponseWriter, basename string, tmpldata any) error {
 	tmpls, err := b.templates()
 	if err != nil {
 		return err

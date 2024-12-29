@@ -7,7 +7,7 @@ import (
 	"runtime/debug"
 )
 
-func (b *bull) buildinfo(w http.ResponseWriter, r *http.Request) error {
+func (b *bullServer) buildinfo(w http.ResponseWriter, r *http.Request) error {
 	info, ok := debug.ReadBuildInfo()
 	if !ok {
 		return fmt.Errorf("debug.ReadBuildInfo() failed")

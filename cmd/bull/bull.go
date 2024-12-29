@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -12,6 +13,8 @@ import (
 	"runtime/debug"
 	"time"
 
+	"github.com/BurntSushi/toml"
+	"github.com/gokrazy/bull"
 	thirdparty "github.com/gokrazy/bull/third_party"
 	"golang.org/x/image/font/gofont/gobold"
 	"golang.org/x/image/font/gofont/gomono"
@@ -39,6 +42,30 @@ func defaultEditor() string {
 		return "codemirror"
 	}
 	return "textarea"
+}
+
+func loadContentSettings(content *os.Root) (bull.ContentSettings, error) {
+	cs := bull.ContentSettings{
+		HardWraps: true, // like SilverBullet
+	}
+	csf, err := content.Open("_bull/content-settings.toml")
+	if err != nil {
+		if os.IsNotExist(err) {
+			// Start with default settings if no content-settings.toml exists.
+			return cs, nil
+		}
+		return cs, err
+	}
+	defer csf.Close()
+	csb, err := io.ReadAll(csf)
+	if err != nil {
+		return cs, err
+	}
+	if err := toml.Unmarshal(csb, &cs); err != nil {
+		return cs, err
+	}
+	log.Printf("bull content settings loaded from %s", csf.Name())
+	return cs, nil
 }
 
 func runbull() error {
@@ -92,7 +119,12 @@ func runbull() error {
 	}
 
 	if _, err := content.Stat("_bull"); err == nil {
-		log.Printf("NOTE: your _bull directory in %q will be shadowed by bull-internal handlers", *contentDir)
+		log.Printf("NOTE: your _bull directory in %q will not be served; it will be shadowed by bull-internal handlers", *contentDir)
+	}
+
+	cs, err := loadContentSettings(content)
+	if err != nil {
+		return err
 	}
 
 	var static *os.Root
@@ -104,33 +136,34 @@ func runbull() error {
 		}
 	}
 
+	bull := &bullServer{
+		content:         content,
+		contentDir:      *contentDir,
+		contentSettings: cs,
+		static:          static,
+		editor:          *editor,
+	}
+	if err := bull.init(); err != nil {
+		return err
+	}
+
 	// index for backlinks
 	// TODO: index in the background, print how long it took when done
 	// TODO: deal with permission denied errors.
 	// add a test that ensures bull starts up even when files cannot be read
 	start := time.Now()
 	log.Printf("indexing all pages (markdown files) in %s (for backlinks)", content.Name())
-	idx, err := index(content)
+	idx, err := bull.index()
 	if err != nil {
 		return err
 	}
+	bull.idx = idx
 	log.Printf("discovered in %.2fs: directories: %d, pages: %d, links: %d", time.Since(start).Seconds(), idx.dirs, idx.pages, len(idx.backlinks))
-
-	bull := &bull{
-		content:    content,
-		contentDir: *contentDir,
-		static:     static,
-		idx:        idx,
-		editor:     *editor,
-	}
-	if err := bull.init(); err != nil {
-		return err
-	}
 
 	// TODO: serve a default favicon if there is none in the content directory
 
 	// TODO: should the program work at non-rooted URLs?
-	http.Handle("/{page...}", handleError(bull.render))
+	http.Handle("/{page...}", handleError(bull.handleRender))
 	http.Handle(bullURLPrefix+"edit/{page...}", handleError(bull.edit))
 
 	var zeroModTime time.Time

@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func (b *bull) indexNotFound() (string, error) {
+func (b *bullServer) indexNotFound() (string, error) {
 	f, err := b.content.Open(".")
 	if err != nil {
 		return "", err
@@ -37,7 +37,7 @@ bull works with pages, so maybe you would like to:
 `, b.contentDir, len(dirents)), nil
 }
 
-func (b *bull) renderNotFound(w http.ResponseWriter, r *http.Request) error {
+func (b *bullServer) renderNotFound(w http.ResponseWriter, r *http.Request) error {
 	pageName := pageFromURL(r)
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, "# Error: page %q not found\n", pageName)

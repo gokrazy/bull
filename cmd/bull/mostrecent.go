@@ -8,7 +8,7 @@ import (
 	"sort"
 )
 
-func (b *bull) mostrecent(w http.ResponseWriter, r *http.Request) error {
+func (b *bullServer) mostrecent(w http.ResponseWriter, r *http.Request) error {
 	// walk the entire content directory
 	var pages []*page
 	err := fs.WalkDir(b.content.FS(), ".", func(path string, d fs.DirEntry, err error) error {

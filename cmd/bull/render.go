@@ -11,6 +11,7 @@ import (
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
+	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/renderer/html"
 	"github.com/yuin/goldmark/text"
 	"go.abhg.dev/goldmark/wikilink"
@@ -31,37 +32,37 @@ func (r *resolver) ResolveWikilink(n *wikilink.Node) (destination []byte, err er
 	return nil, nil // do not link
 }
 
-func converter(contentRoot *os.Root) goldmark.Markdown {
+func (b *bullServer) converter() goldmark.Markdown {
 	// TODO: Set up autolinking for bare URLs (like golang.org):
 	// https://github.com/yuin/goldmark/blob/master/README.md#linkify-extension
+	var rendererOpts []renderer.Option
+	if b.contentSettings.HardWraps {
+		// Turn newlines into <br>.
+		rendererOpts = append(rendererOpts, html.WithHardWraps())
+	}
 	return goldmark.New(
 		goldmark.WithExtensions(
 			extension.GFM,
 			&wikilink.Extender{
 				Resolver: &resolver{
-					contentRoot: contentRoot,
+					contentRoot: b.content,
 				},
 			},
 		),
-		goldmark.WithRendererOptions(
-			// SilverBullet turns newlines into <br>, so do we.
-			//
-			// TODO: consider making this option configurable.
-			html.WithHardWraps(),
-		),
+		goldmark.WithRendererOptions(rendererOpts...),
 	)
 }
 
-func renderMD(contentRoot *os.Root, md string) ast.Node {
-	converter := converter(contentRoot)
+func (b *bullServer) renderMD(md string) ast.Node {
+	converter := b.converter()
 	p := converter.Parser()
 	return p.Parse(text.NewReader([]byte(md)))
 }
 
-func render(contentRoot *os.Root, md string) string {
+func (b *bullServer) render(md string) string {
 	var buf bytes.Buffer
 
-	converter := converter(contentRoot)
+	converter := b.converter()
 	if err := converter.Convert([]byte(md), &buf); err != nil {
 		// TODO: error page template
 		return "goldmark.Convert: " + err.Error()
@@ -69,7 +70,7 @@ func render(contentRoot *os.Root, md string) string {
 	return buf.String()
 }
 
-func (b *bull) serveStaticFile(w http.ResponseWriter, r *http.Request) error {
+func (b *bullServer) serveStaticFile(w http.ResponseWriter, r *http.Request) error {
 	staticFn := pageFromURL(r)
 	f, err := b.content.Open(staticFn)
 	if err != nil {
@@ -84,7 +85,7 @@ func (b *bull) serveStaticFile(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (b *bull) render(w http.ResponseWriter, r *http.Request) error {
+func (b *bullServer) handleRender(w http.ResponseWriter, r *http.Request) error {
 	possibilities := filesFromURL(r)
 	pg, err := readFirst(b.content, possibilities)
 	switch {
@@ -111,7 +112,7 @@ func (b *bull) render(w http.ResponseWriter, r *http.Request) error {
 	}
 }
 
-func (b *bull) renderWithBacklinks(w http.ResponseWriter, r *http.Request, pg *page) error {
+func (b *bullServer) renderWithBacklinks(w http.ResponseWriter, r *http.Request, pg *page) error {
 	// Extend the content with backlinks (wb).
 	wb := []byte(pg.Content)
 
@@ -128,7 +129,7 @@ func (b *bull) renderWithBacklinks(w http.ResponseWriter, r *http.Request, pg *p
 	return b.renderMarkdown(w, r, pg, wb)
 }
 
-func (b *bull) renderBullMarkdown(w http.ResponseWriter, r *http.Request, basename string, buf bytes.Buffer) error {
+func (b *bullServer) renderBullMarkdown(w http.ResponseWriter, r *http.Request, basename string, buf bytes.Buffer) error {
 	pageName := bullPrefix + basename
 	pg := &page{
 		PageName: pageName,
@@ -139,8 +140,8 @@ func (b *bull) renderBullMarkdown(w http.ResponseWriter, r *http.Request, basena
 	return b.renderMarkdown(w, r, pg, buf.Bytes())
 }
 
-func (b *bull) renderMarkdown(w http.ResponseWriter, r *http.Request, pg *page, md []byte) error {
-	html := render(b.content, string(md))
+func (b *bullServer) renderMarkdown(w http.ResponseWriter, r *http.Request, pg *page, md []byte) error {
+	html := b.render(string(md))
 	return b.executeTemplate(w, "page.html.tmpl", struct {
 		RequestPath  string
 		ReadOnly     bool

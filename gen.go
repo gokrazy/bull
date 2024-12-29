@@ -1,3 +1,3 @@
-package gen
+package bull
 
 //go:generate ./regenerate.sh
