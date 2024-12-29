@@ -50,8 +50,11 @@ func (b *bullServer) renderNotFound(w http.ResponseWriter, r *http.Request) erro
 	}
 
 	pg := &page{
-		Content: buf.String(),
-		ModTime: time.Now(),
+		Error:    true,
+		FileName: page2desired(pageName),
+		PageName: pageName,
+		Content:  buf.String(),
+		ModTime:  time.Now(),
 	}
 	w.WriteHeader(http.StatusNotFound)
 	return b.renderMarkdown(w, r, pg, buf.Bytes())

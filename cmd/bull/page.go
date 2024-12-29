@@ -16,6 +16,7 @@ import (
 // or generated on the fly by bull itself (those have a FileName
 // starting with _bull/).
 type page struct {
+	Error    bool   // whether this is an error page
 	PageName string // relative to content directory, no .md suffix
 	FileName string // relative to content directory, with .md suffix
 	// Content is intentionally a string (immutable) instead of a []byte.
