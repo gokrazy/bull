@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 )
 
 func (b *bullServer) save(w http.ResponseWriter, r *http.Request) error {
@@ -35,6 +36,9 @@ func (b *bullServer) save(w http.ResponseWriter, r *http.Request) error {
 		firstFn = page2desired(pageName)
 	}
 
+	if err := mkdirAll(b.content, filepath.Dir(firstFn), 0755); err != nil {
+		return err
+	}
 	f, err := b.content.OpenFile(firstFn, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		return err
