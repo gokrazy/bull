@@ -148,16 +148,16 @@ func (b *bullServer) renderBullMarkdown(w http.ResponseWriter, r *http.Request, 
 func (b *bullServer) renderMarkdown(w http.ResponseWriter, r *http.Request, pg *page, md []byte) error {
 	html := b.render(string(md))
 	return b.executeTemplate(w, "page.html.tmpl", struct {
-		RequestPath  string
-		ReadOnly     bool
-		AbsolutePath string
-		Page         *page
-		Content      template.HTML
+		RequestPath string
+		ReadOnly    bool
+		Title       string
+		Page        *page
+		Content     template.HTML
 	}{
-		RequestPath:  r.URL.EscapedPath(),
-		ReadOnly:     b.editor == "",
-		AbsolutePath: pg.Abs(b.contentDir),
-		Page:         pg,
-		Content:      template.HTML(html),
+		RequestPath: r.URL.EscapedPath(),
+		ReadOnly:    b.editor == "",
+		Title:       pg.Abs(b.contentDir),
+		Page:        pg,
+		Content:     template.HTML(html),
 	})
 }

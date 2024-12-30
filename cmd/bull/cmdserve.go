@@ -132,10 +132,12 @@ func serve(args []string) error {
 				http.ServeContent(w, r, basename, zeroModTime, bytes.NewReader(thirdparty.BullCodemirror))
 			})
 	}
-	http.Handle(bullURLPrefix+"mostrecent", handleError(bull.mostrecent))
-	http.Handle(bullURLPrefix+"buildinfo", handleError(bull.buildinfo))
-	http.Handle(bullURLPrefix+"watch/{page...}", handleError(bull.watch))
-	http.Handle(bullURLPrefix+"save/{page...}", handleError(bull.save))
+	http.Handle("GET "+bullURLPrefix+"mostrecent", handleError(bull.mostrecent))
+	http.Handle("GET "+bullURLPrefix+"buildinfo", handleError(bull.buildinfo))
+	http.Handle("GET "+bullURLPrefix+"watch/{page...}", handleError(bull.watch))
+	http.Handle("POST "+bullURLPrefix+"save/{page...}", handleError(bull.save))
+	http.Handle("GET "+bullURLPrefix+"search", handleError(bull.search))
+	http.Handle("GET "+bullURLPrefix+"_search", handleError(bull.searchAPI))
 
 	ln, err := net.Listen("tcp", *listenAddr)
 	if err != nil {

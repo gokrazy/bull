@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+{{ template "head.html.tmpl" . }}
+<body>
+  {{ template "nav.html.tmpl" . }}
+  <main>
+    <div>
+      <h1 class="bull_title">Search</h1>
+
+      <div class="bull_page">
+
+	<form action="/_bull/search" method="post" id="bull_searchform">
+	  <input type="text" name="q" id="bull_q" placeholder="enter search query here" autofocus="autofocus">
+	  <input type="submit" id="bull_submit">
+	</form>
+
+	<h2>Search results</h2>
+
+	<div id="bull_searchresults">
+	  <i>Enter a search query above.</i>
+	</div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <script type="text/javascript">
+    function renderResults(results) {
+	var html = '<ul>';
+	for (result of results) {
+	    var u = new URL(window.location);
+	    u.pathname = '/' + result.page_name;
+	    u.hash = '';
+	    html += '<li><a href="' + u.toString() + '">' + result.page_name + '</a><br><pre>' + result.matching_lines.join("\n") + "</pre></li>\n";
+	}
+	return html;
+    }
+    const searchresults = document.getElementById('bull_searchresults');
+    let searchTimeout;
+    let lastq;
+    var resultstream;
+    function search(query) {
+	if (lastq === query) {
+	    return;
+	}
+	lastq = query;
+	searchTimeout = undefined;
+
+	if (lastq === '') {
+	    console.log('should abort current search, if any');
+	    searchresults.innerHTML = '<i>Enter a search query above.</i>';
+	    var u = new URL(window.location);
+	    u.hash = '#';
+	    window.location = u.toString();
+	    if (resultstream === undefined) {
+		return;
+	    }
+	    resultstream.close();
+	    return;
+	}
+	searchresults.innerHTML = '<i>Searching…</i>';
+	console.log('should start search now:', lastq);
+	var u = new URL(window.location);
+	u.hash = lastq;
+	window.location = u.toString();
+	var p = new URLSearchParams();
+	p.set('q', lastq);
+	resultstream = new EventSource('/_bull/_search?'+p.toString());
+	var results = [];
+	resultstream.onmessage = function(e) {
+	    const chunk = JSON.parse(e.data);
+	    if (chunk.type === 'result') {
+		results.push(chunk);
+	    } else if (chunk.type === 'done') {
+		resultstream.close();
+	    }
+	    searchresults.innerHTML = renderResults(results);
+	}
+	resultstream.onerror = function(err) {
+	    console.log('resultstream.error', err);
+	    searchresults.innerHTML = '<i>Search failed.</i>';
+	}
+    }
+    const q = document.getElementById('bull_q');
+    q.onkeyup = function(e) {
+	if (searchTimeout !== undefined) {
+	    clearTimeout(searchTimeout);
+	}
+	searchTimeout = setTimeout(function() {
+	    search(q.value);
+	}, 500);
+    }
+
+    const submit = document.getElementById('bull_submit');
+    submit.style.display = 'none';
+
+    const hash = window.location.hash;
+    if (hash !== undefined && hash !== "" && hash !== "#") {
+	const query = hash.substr(1); // strip #
+	console.log('restoring search for', query, 'from URL hash');
+	q.value = query;
+	search(query);
+    }
+  </script>
+
+</body>
+</html>

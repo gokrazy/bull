@@ -26,6 +26,12 @@
 	       {{ end }}
 	       >Most recent</a></li>
 
+	<li><a href="/_bull/search"
+	       {{ if (eq .Page.PageName "_bull/search") }}
+	       class="active"
+	       {{ end }}
+	       >Search</a></li>
+
       </ul>
     </nav>
     <nav id="bull_mobilenav">
@@ -51,6 +57,11 @@
 	       class="active"
 	       {{ end }}
 	       >Recent</a></li>
+	<li><a href="/_bull/search"
+	       {{ if (eq .Page.PageName "_bull/search") }}
+	       class="active"
+	       {{ end }}
+	       >Search</a></li>
 
       </ul>
 

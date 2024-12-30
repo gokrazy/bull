@@ -34,12 +34,12 @@ func (b *bullServer) edit(w http.ResponseWriter, r *http.Request) error {
 	return b.executeTemplate(w, "edit.html.tmpl", struct {
 		RequestPath     string
 		ReadOnly        bool
-		AbsolutePath    string
+		Title           string
 		Page            *page
 		MarkdownContent string
 	}{
 		RequestPath:     r.URL.EscapedPath(),
-		AbsolutePath:    pg.Abs(b.contentDir),
+		Title:           pg.Abs(b.contentDir),
 		Page:            pg,
 		MarkdownContent: pg.Content,
 	})

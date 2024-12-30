@@ -5,15 +5,7 @@ import (
 	"time"
 )
 
-func (b *bullServer) watch(w http.ResponseWriter, r *http.Request) error {
-	ctx := r.Context()
-
-	possibilities := filesFromURL(r)
-	lastb, err := readFirst(b.content, possibilities)
-	if err != nil {
-		return err
-	}
-
+func initEventStream(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
@@ -26,6 +18,18 @@ func (b *bullServer) watch(w http.ResponseWriter, r *http.Request) error {
 	if flusher, ok := w.(http.Flusher); ok {
 		flusher.Flush()
 	}
+}
+
+func (b *bullServer) watch(w http.ResponseWriter, r *http.Request) error {
+	ctx := r.Context()
+
+	possibilities := filesFromURL(r)
+	lastb, err := readFirst(b.content, possibilities)
+	if err != nil {
+		return err
+	}
+
+	initEventStream(w)
 
 	// TODO(performance): inotify fast path?
 
