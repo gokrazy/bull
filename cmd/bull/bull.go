@@ -87,6 +87,7 @@ If no verb is specified, bull will default to 'serve'.
 
 Verbs:
   serve  - serve markdown pages
+  mv     - rename markdown page and update links
 
 Examples:
   % bull                               # serve the current directory
@@ -117,6 +118,8 @@ Command-line flags:
 	switch verb {
 	case "serve":
 		return serve(args)
+	case "mv":
+		return mv(args)
 	}
 	fmt.Fprintf(os.Stderr, "unknown verb %q\n", verb)
 	flag.Usage()
