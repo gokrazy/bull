@@ -122,6 +122,8 @@ func serve(args []string) error {
 	} {
 		basename := "go" + variant.name + ".ttf"
 		http.HandleFunc(bullURLPrefix+"gofont/"+basename, func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Cache-Control", "public, max-age=604800, immutable")
+			w.Header().Set("Expires", time.Now().Add(7*24*time.Hour).Format(http.TimeFormat))
 			http.ServeContent(w, r, basename, zeroModTime, bytes.NewReader(variant.content))
 		})
 	}
@@ -129,6 +131,7 @@ func serve(args []string) error {
 		basename := "bull-codemirror.bundle.js"
 		http.HandleFunc(bullURLPrefix+"js/"+basename,
 			func(w http.ResponseWriter, r *http.Request) {
+				// TODO: set cache headers and include cache buster in html.tmpl
 				http.ServeContent(w, r, basename, zeroModTime, bytes.NewReader(thirdparty.BullCodemirror))
 			})
 	}
