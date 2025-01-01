@@ -1,4 +1,4 @@
-package main
+package bull
 
 import (
 	"flag"
@@ -67,7 +67,7 @@ func usage(fset *flag.FlagSet, help string) func() {
 	}
 }
 
-func runbull() error {
+func Runbull() error {
 	info, ok := debug.ReadBuildInfo()
 	mainVersion := info.Main.Version
 	if !ok {
@@ -125,10 +125,4 @@ Command-line flags:
 	flag.Usage()
 	os.Exit(2)
 	return nil
-}
-
-func main() {
-	if err := runbull(); err != nil {
-		log.Fatal(err)
-	}
 }
