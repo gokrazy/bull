@@ -97,7 +97,7 @@ func mv(args []string) error {
 	if isMarkdown(src) {
 		possibilities = []string{src}
 	}
-	pg, err := readFirst(bull.content, possibilities)
+	pg, err := bull.readFirst(possibilities)
 	if err != nil {
 		return err
 	}
@@ -118,7 +118,7 @@ func mv(args []string) error {
 	}
 	log.Printf("# backlinks: %d", len(idx.backlinks[pg.PageName]))
 	for _, linker := range idx.backlinks[pg.PageName] {
-		linkerpg, err := readFirst(bull.content, page2files(linker))
+		linkerpg, err := bull.readFirst(page2files(linker))
 		if err != nil {
 			log.Printf("  not found: %v", err)
 			continue

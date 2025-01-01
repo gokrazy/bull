@@ -79,10 +79,10 @@ func page2files(page string) []string {
 
 func page2desired(page string) string { return page + ".md" }
 
-func readFirst(contentRoot *os.Root, possibilities []string) (*page, error) {
+func (b *bullServer) readFirst(possibilities []string) (*page, error) {
 	var firstErr error
 	for _, fn := range possibilities {
-		pg, err := read(contentRoot, fn)
+		pg, err := b.read(fn)
 		if err != nil {
 			if firstErr == nil {
 				firstErr = err
@@ -94,8 +94,8 @@ func readFirst(contentRoot *os.Root, possibilities []string) (*page, error) {
 	return nil, firstErr
 }
 
-func read(contentRoot *os.Root, file string) (*page, error) {
-	f, err := contentRoot.Open(file)
+func (b *bullServer) read(file string) (*page, error) {
+	f, err := b.content.Open(file)
 	if err != nil {
 		return nil, err
 	}
@@ -104,15 +104,20 @@ func read(contentRoot *os.Root, file string) (*page, error) {
 	if err != nil {
 		return nil, err
 	}
-	b, err := io.ReadAll(f)
+	content, err := io.ReadAll(f)
 	if err != nil {
 		return nil, err
+	}
+	if b.customization != nil {
+		if apr := b.customization.AfterPageRead; apr != nil {
+			content = apr(content)
+		}
 	}
 	return &page{
 		Exists:   true, // read from disk
 		PageName: file2page(file),
 		FileName: file,
-		Content:  string(b),
+		Content:  string(content),
 		ModTime:  fi.ModTime(),
 	}, nil
 }

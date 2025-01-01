@@ -91,7 +91,7 @@ func (b *bullServer) serveStaticFile(w http.ResponseWriter, r *http.Request) err
 
 func (b *bullServer) handleRender(w http.ResponseWriter, r *http.Request) error {
 	possibilities := filesFromURL(r)
-	pg, err := readFirst(b.content, possibilities)
+	pg, err := b.readFirst(possibilities)
 	switch {
 	case err == nil:
 		// The requested page exists!

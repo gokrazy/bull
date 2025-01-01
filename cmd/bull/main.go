@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	if err := bull.Runbull(); err != nil {
+	if err := (&bull.Customization{}).Runbull(); err != nil {
 		log.Fatal(err)
 	}
 }

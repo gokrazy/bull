@@ -67,7 +67,15 @@ func usage(fset *flag.FlagSet, help string) func() {
 	}
 }
 
-func Runbull() error {
+type Customization struct {
+	// AfterPageRead is a hook that is called after a page is read and can be
+	// used to modify or replace the content.
+	AfterPageRead func([]byte) []byte
+
+	// TODO: markdown goldmark option hook?
+}
+
+func (c *Customization) Runbull() error {
 	info, ok := debug.ReadBuildInfo()
 	mainVersion := info.Main.Version
 	if !ok {
@@ -117,7 +125,7 @@ Command-line flags:
 	}
 	switch verb {
 	case "serve":
-		return serve(args)
+		return c.serve(args)
 	case "mv":
 		return mv(args)
 	}

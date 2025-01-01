@@ -32,7 +32,7 @@ func defaultEditor() string {
 	return "textarea"
 }
 
-func serve(args []string) error {
+func (c *Customization) serve(args []string) error {
 	fset := flag.NewFlagSet("serve", flag.ExitOnError)
 	fset.Usage = usage(fset, serveUsage)
 
@@ -82,6 +82,7 @@ func serve(args []string) error {
 	}
 
 	bull := &bullServer{
+		customization:   c,
 		content:         content,
 		contentDir:      *contentDir,
 		contentSettings: cs,

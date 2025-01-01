@@ -13,7 +13,7 @@ func (b *bullServer) edit(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	possibilities := filesFromURL(r)
-	pg, err := readFirst(b.content, possibilities)
+	pg, err := b.readFirst(possibilities)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// It is not an error if a page does not exist,

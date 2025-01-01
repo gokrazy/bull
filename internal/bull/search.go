@@ -82,7 +82,7 @@ func (b *bullServer) searchAPI(w http.ResponseWriter, r *http.Request) error {
 					return err
 				}
 				// fmt.Printf("reading %s\n", pg.FileName)
-				pg, err := read(b.content, pg.FileName)
+				pg, err := b.read(pg.FileName)
 				if err != nil {
 					// TODO: send an error result
 					log.Printf("read: %v", err)

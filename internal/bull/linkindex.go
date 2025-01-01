@@ -176,7 +176,7 @@ func (b *bullServer) index() (*idx, error) {
 			linksN := make(map[string][]string)
 			for pg := range i.readq {
 				// fmt.Printf("reading %s\n", fn)
-				pg, err := read(b.content, pg.FileName)
+				pg, err := b.read(pg.FileName)
 				if err != nil {
 					return err
 				}

@@ -17,6 +17,7 @@ import (
 )
 
 type bullServer struct {
+	customization *Customization
 	// content is a directory tree.
 	content         *os.Root
 	contentDir      string // only for <title>

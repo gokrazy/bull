@@ -24,7 +24,7 @@ func (b *bullServer) watch(w http.ResponseWriter, r *http.Request) error {
 	ctx := r.Context()
 
 	possibilities := filesFromURL(r)
-	lastb, err := readFirst(b.content, possibilities)
+	lastb, err := b.readFirst(possibilities)
 	if err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func (b *bullServer) watch(w http.ResponseWriter, r *http.Request) error {
 			return ctx.Err()
 
 		case <-poller.C:
-			b, err := readFirst(b.content, possibilities)
+			b, err := b.readFirst(possibilities)
 			if err != nil {
 				return err
 			}
