@@ -20,9 +20,9 @@ const serveUsage = `
 serve - serve markdown pages
 
 Example:
-  % bull                               # serve the current directory
-  % bull -content ~/keep serve         # serve ~/keep
-  % bull serve -listen=100.5.23.42:80  # serve on a Tailscale VPN IP
+  % bull                                # serve the current directory
+  % bull --content ~/keep serve         # serve ~/keep
+  % bull serve --listen=100.5.23.42:80  # serve on a Tailscale VPN IP
 `
 
 func defaultEditor() string {

@@ -63,7 +63,7 @@ func usage(fset *flag.FlagSet, help string) func() {
 		fmt.Fprintf(fset.Output(), "%s", help)
 		fmt.Fprintf(fset.Output(), "\nCommand-line flags:\n")
 		fset.PrintDefaults()
-		fmt.Fprintf(fset.Output(), "\n(See bull -help for global command-line flags.)\n")
+		fmt.Fprintf(fset.Output(), "\n(See bull --help for global command-line flags.)\n")
 	}
 }
 
@@ -89,7 +89,7 @@ bull is a minimalistic bullet journaling software.
 
 Syntax: bull [global flags] <verb> [flags] [args]
 
-To get help on any verb, use bull <verb> -help or bull help <verb>.
+To get help on any verb, use bull <verb> --help or bull help <verb>.
 
 If no verb is specified, bull will default to 'serve'.
 
@@ -98,11 +98,11 @@ Verbs:
   mv     - rename markdown page and update links
 
 Examples:
-  % bull                               # serve the current directory
-  % bull -content ~/keep serve         # serve ~/keep
-  % bull serve -listen=100.5.23.42:80  # serve on a Tailscale VPN IP
+  % bull                                # serve the current directory
+  % bull --content ~/keep serve         # serve ~/keep
+  % bull serve --listen=100.5.23.42:80  # serve on a Tailscale VPN IP
 
-Command-line flags:
+Global command-line flags:
 `))
 		flag.PrintDefaults()
 	}
