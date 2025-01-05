@@ -61,7 +61,6 @@ bull uses the yuin/goldmark markdown renderer, specifically:
 
 ## planned improvements
 
-* inotify / fswatch instead of polling for live reload
 * customization: make it easy to build your own bull
   * you can leave a favicon.ico in your content directory
 * make each heading foldable
