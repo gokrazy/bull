@@ -1,5 +1,5 @@
 <header id="bull_navbar">
-  <a href="/" style="font-size: 200%; margin-left: .5em">🐮</a>
+  <a id="bull_nav_index" href="/" style="font-size: 200%; margin-left: .5em">🐮</a>
   <div>
     <a href="/"><h1>bull</h1></a>
     <nav id="bull_desktopnav">
@@ -12,21 +12,21 @@
 	       {{ end }}
 	       >View page</a></li>
 	{{ if (and (not .Page.IsGenerated) (not .ReadOnly)) }}
-	<li><a href="/_bull/edit{{ .Page.URLPath }}"
+	<li><a id="bull_nav_edit" href="/_bull/edit{{ .Page.URLPath }}"
 	       {{ if (hasPrefix .RequestPath "/_bull/edit/") }}
 	       class="active"
 	       {{ end }}
-	       >{{ if (not .Page.Exists) }}Create page{{ else }}Edit page{{ end }}</a></li>
+	       >{{ if (not .Page.Exists) }}Create page{{ else }}<span style="text-decoration: underline">E</span>dit page{{ end }}</a></li>
 	{{ else }}
 	<li>Edit page</li>
 	{{ end }}
-	<li><a href="/_bull/mostrecent"
+	<li><a id="bull_nav_mostrecent" href="/_bull/mostrecent"
 	       {{ if (eq .Page.PageName "_bull/mostrecent") }}
 	       class="active"
 	       {{ end }}
-	       >Most recent</a></li>
+	       ><span style="text-decoration: underline">M</span>ost recent</a></li>
 
-	<li><a href="/_bull/search"
+	<li><a id="bull_nav_search" href="/_bull/search"
 	       {{ if (eq .Page.PageName "_bull/search") }}
 	       class="active"
 	       {{ end }}

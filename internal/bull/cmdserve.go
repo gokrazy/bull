@@ -3,6 +3,7 @@ package bull
 import (
 	"bytes"
 	"flag"
+	"io/fs"
 	"log"
 	"net"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/gokrazy/bull/internal/assets"
 	thirdparty "github.com/gokrazy/bull/third_party"
 	"golang.org/x/image/font/gofont/gobold"
 	"golang.org/x/image/font/gofont/gomono"
@@ -135,6 +137,11 @@ func (c *Customization) serve(args []string) error {
 				// TODO: set cache headers and include cache buster in html.tmpl
 				http.ServeContent(w, r, basename, zeroModTime, bytes.NewReader(thirdparty.BullCodemirror))
 			})
+		var assetsFS fs.FS = assets.FS
+		if static != nil {
+			assetsFS = static.FS()
+		}
+		http.Handle(bullURLPrefix+"js/", http.StripPrefix(bullURLPrefix, http.FileServerFS(assetsFS)))
 	}
 	http.Handle("GET "+bullURLPrefix+"mostrecent", handleError(bull.mostrecent))
 	http.Handle("GET "+bullURLPrefix+"buildinfo", handleError(bull.buildinfo))

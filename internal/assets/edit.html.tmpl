@@ -17,7 +17,7 @@
 
 	<form action="/_bull/save/{{ .Page.PageName }}" method="post">
 	  <input type="hidden" id="bull-markdown" name="markdown">
-	  <input type="submit" id="bull-save" value="save page">
+	  <input type="submit" id="bull-save" value="save page (ctrl/meta+s)">
 	</form>
 
 	<div id="cm-goes-here"></div>
@@ -45,6 +45,8 @@
 	//location.reload();
     }
   </script>
+
+  <script src="/_bull/js/navedit.js"></script>
 
 </body>
 </html>
