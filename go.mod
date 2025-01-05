@@ -4,6 +4,7 @@ go 1.24rc1
 
 require (
 	github.com/BurntSushi/toml v1.4.0
+	github.com/fsnotify/fsnotify v1.8.0
 	github.com/yuin/goldmark v1.7.8
 	go.abhg.dev/goldmark/wikilink v0.5.0
 	golang.org/x/image v0.23.0
