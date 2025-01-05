@@ -13,7 +13,7 @@ import (
 	"sync"
 
 	"github.com/gokrazy/bull"
-	"github.com/gokrazy/bull/internal/html"
+	"github.com/gokrazy/bull/internal/assets"
 )
 
 type bullServer struct {
@@ -43,7 +43,7 @@ func tmplFromFS(fs fs.FS) (*template.Template, error) {
 }
 
 var staticOnce = sync.OnceValues(func() (*template.Template, error) {
-	return tmplFromFS(html.FS)
+	return tmplFromFS(assets.FS)
 })
 
 func (b *bullServer) templates() (*template.Template, error) {
