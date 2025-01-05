@@ -98,6 +98,9 @@ const escapeHtml = (unsafe) => {
 
     const submit = document.getElementById('bull_submit');
     submit.style.display = 'none';
+    submit.onclick = function(event) {
+	event.preventDefault();
+    }
 
     const hash = window.location.hash;
     if (hash !== undefined && hash !== "" && hash !== "#") {
