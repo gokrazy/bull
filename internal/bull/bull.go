@@ -124,7 +124,7 @@ Command-line flags:
 		args = []string{"-help"}
 	}
 	switch verb {
-	case "serve":
+	case "serve", "server":
 		return c.serve(args)
 	case "mv":
 		return mv(args)
