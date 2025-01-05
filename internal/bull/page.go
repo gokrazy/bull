@@ -1,6 +1,8 @@
 package bull
 
 import (
+	"fmt"
+	"hash/fnv"
 	"io"
 	"net/http"
 	"net/url"
@@ -22,6 +24,12 @@ type page struct {
 	// Content is intentionally a string (immutable) instead of a []byte.
 	Content string
 	ModTime time.Time
+}
+
+func (p *page) ContentHash() string {
+	h := fnv.New128()
+	h.Write([]byte(p.Content))
+	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
 func (p *page) AvailableAt(encodedPath string) bool {

@@ -20,7 +20,11 @@
 
   <script type="text/javascript">
     var u = new URL(document.URL);
-    var updates = new EventSource('/_bull/watch' + u.pathname);
+    u.pathname = '/_bull/watch' + u.pathname;
+    var params = new URLSearchParams();
+    params.set('hash', '{{ .ContentHash }}');
+    u.search = params.toString();
+    var updates = new EventSource(u.toString());
     window.onbeforeunload = function() { updates.close(); };
     updates.onmessage = function(e) {
 	//const update = JSON.parse(e.data)

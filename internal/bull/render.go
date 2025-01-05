@@ -153,11 +153,13 @@ func (b *bullServer) renderMarkdown(w http.ResponseWriter, r *http.Request, pg *
 		Title       string
 		Page        *page
 		Content     template.HTML
+		ContentHash string
 	}{
 		RequestPath: r.URL.EscapedPath(),
 		ReadOnly:    b.editor == "",
 		Title:       pg.Abs(b.contentDir),
 		Page:        pg,
 		Content:     template.HTML(html),
+		ContentHash: pg.ContentHash(),
 	})
 }
