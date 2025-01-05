@@ -26,12 +26,12 @@
 
   <script type="text/javascript">
 
-const escapeHtml = (unsafe) => {
-    return unsafe.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
-}
+    const escapeHtml = (unsafe) => {
+	return unsafe.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+    }
 
     function renderResults(results) {
-	var html = '<ul>';
+	var html = '<p>Search results: ' + results.length + '</p><ul>';
 	for (result of results) {
 	    var u = new URL(window.location);
 	    u.pathname = '/' + result.page_name;
@@ -78,8 +78,8 @@ const escapeHtml = (unsafe) => {
 		results.push(chunk);
 	    } else if (chunk.type === 'done') {
 		resultstream.close();
+		searchresults.innerHTML = renderResults(results);
 	    }
-	    searchresults.innerHTML = renderResults(results);
 	}
 	resultstream.onerror = function(err) {
 	    console.log('resultstream.error', err);

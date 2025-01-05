@@ -1,19 +1,24 @@
 package bull
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"runtime"
+	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
+	"time"
 
 	"golang.org/x/sync/errgroup"
 )
 
 func (b *bullServer) search(w http.ResponseWriter, r *http.Request) error {
-	// TODO: implement server-rendered version for non-javascript
+	// TODO: implement server-rendered version for non-javascript,
+	// i.e. POST /_bull/search handler
 	const pageName = bullPrefix + "search"
 	return b.executeTemplate(w, "search.html.tmpl", struct {
 		Title       string
@@ -41,10 +46,16 @@ func grep(content, query string) []string {
 	return matches
 }
 
+type progressUpdate struct {
+	Type    string `json:"type"`
+	Message string `json:"message"`
+}
+
 type match struct {
 	Type          string   `json:"type"`
 	PageName      string   `json:"page_name"`
 	MatchingLines []string `json:"matching_lines"`
+	nameMatch     bool
 }
 
 func (b *bullServer) searchAPI(w http.ResponseWriter, r *http.Request) error {
@@ -54,6 +65,7 @@ func (b *bullServer) searchAPI(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	query := r.FormValue("q")
+	start := time.Now()
 	log.Printf("searching for query %q", query)
 
 	ctx := r.Context()
@@ -63,16 +75,38 @@ func (b *bullServer) searchAPI(w http.ResponseWriter, r *http.Request) error {
 	i := newIndexer(b.content)
 
 	var (
-		results = make(chan []byte)
-		readg   errgroup.Group
-		streamg sync.WaitGroup
+		resultsMu sync.Mutex
+		results   []match
+
+		readg     errgroup.Group
+		progressg sync.WaitGroup
+
+		filesRead atomic.Uint64
 	)
-	streamg.Add(1)
+	progressg.Add(1)
+	progressCtx, progressCanc := context.WithCancel(ctx)
+	defer progressCanc()
 	go func() {
-		defer streamg.Done()
-		for result := range results {
-			w.Write(append(append([]byte("data: "), result...), '\n', '\n'))
-			flusher.Flush()
+		defer progressg.Done()
+		for {
+			select {
+			case <-progressCtx.Done():
+				return
+			case <-time.After(1 * time.Second):
+				b, err := json.Marshal(progressUpdate{
+					Type:    "progress",
+					Message: fmt.Sprintf("searched through %d files", filesRead.Load()),
+				})
+				if err != nil {
+					log.Print(err)
+					return
+				}
+				if err := ctx.Err(); err != nil {
+					return
+				}
+				w.Write(append(append([]byte("data: "), b...), '\n', '\n'))
+				flusher.Flush()
+			}
 		}
 	}()
 	for range runtime.NumCPU() {
@@ -88,20 +122,22 @@ func (b *bullServer) searchAPI(w http.ResponseWriter, r *http.Request) error {
 					log.Printf("read: %v", err)
 					continue
 				}
+				filesRead.Add(1)
 				matches := grep(pg.Content, query)
-				matches = append(matches, grep(pg.PageName, query)...)
+				nameMatches := grep(pg.PageName, query)
+				matches = append(matches, nameMatches...)
 				if len(matches) == 0 {
 					continue
 				}
-				b, err := json.Marshal(match{
+				m := match{
 					Type:          "result",
 					PageName:      pg.PageName,
 					MatchingLines: matches,
-				})
-				if err != nil {
-					return err // BUG
+					nameMatch:     len(nameMatches) > 0,
 				}
-				results <- b
+				resultsMu.Lock()
+				results = append(results, m)
+				resultsMu.Unlock()
 			}
 			return nil
 		})
@@ -112,12 +148,41 @@ func (b *bullServer) searchAPI(w http.ResponseWriter, r *http.Request) error {
 	if err := readg.Wait(); err != nil {
 		return err
 	}
-	// Synchronize with the streaming goroutine to ensure it no longer tries to
-	// use the ResponseWriter by the time this handler returns.
-	close(results)
-	streamg.Wait()
+	// Synchronize with the progress update goroutine to ensure it no longer
+	// tries to use the ResponseWriter by the time this handler returns.
+	progressCanc()
+	progressg.Wait()
 
-	// TODO: stream progress every once in a while
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].PageName < results[j].PageName
+	})
+
+	sort.SliceStable(results, func(i, j int) bool {
+		ri := results[i]
+		rj := results[j]
+		if ri.nameMatch && !rj.nameMatch {
+			return true
+		}
+		if !ri.nameMatch && rj.nameMatch {
+			return false
+		}
+		// both are a page name match
+
+		// TODO: rank by some other criterion
+
+		return false
+	})
+
+	log.Printf("search for query %q done in %v, now streaming results", query, time.Since(start))
+
+	// stream search results
+	for _, result := range results {
+		b, err := json.Marshal(result)
+		if err != nil {
+			return err
+		}
+		w.Write(append(append([]byte("data: "), b...), '\n', '\n'))
+	}
 
 	w.Write([]byte(`data: {"type":"done"}` + "\n\n"))
 	flusher.Flush()
