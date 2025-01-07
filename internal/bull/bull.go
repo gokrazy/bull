@@ -76,10 +76,9 @@ type Customization struct {
 }
 
 func (c *Customization) Runbull() error {
-	info, ok := debug.ReadBuildInfo()
-	mainVersion := info.Main.Version
-	if !ok {
-		mainVersion = "<runtime/debug.ReadBuildInfo failed>"
+	mainVersion := "<runtime/debug.ReadBuildInfo failed>"
+	if info, ok := debug.ReadBuildInfo(); ok {
+		mainVersion = info.Main.Version
 	}
 	fmt.Printf("github.com/gokrazy/bull %s\n", mainVersion)
 
