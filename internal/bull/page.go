@@ -21,9 +21,12 @@ type page struct {
 	Exists   bool   // whether the page exists on disk (false for error pages)
 	PageName string // relative to content directory, no .md suffix
 	FileName string // relative to content directory, with .md suffix
-	// Content is intentionally a string (immutable) instead of a []byte.
-	Content string
-	ModTime time.Time
+	ModTime  time.Time
+
+	// DiskContent and Content are intentionally strings (immutable)
+	// instead of byte slices ([]byte, modifiable).
+	DiskContent string
+	Content     string
 }
 
 func (p *page) ContentHash() string {
@@ -112,21 +115,23 @@ func (b *bullServer) read(file string) (*page, error) {
 	if err != nil {
 		return nil, err
 	}
-	content, err := io.ReadAll(f)
+	diskContent, err := io.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
+	content := diskContent
 	if b.customization != nil {
 		if apr := b.customization.AfterPageRead; apr != nil {
-			content = apr(content)
+			content = apr(diskContent)
 		}
 	}
 	return &page{
-		Exists:   true, // read from disk
-		PageName: file2page(file),
-		FileName: file,
-		Content:  string(content),
-		ModTime:  fi.ModTime(),
+		Exists:      true, // read from disk
+		PageName:    file2page(file),
+		FileName:    file,
+		ModTime:     fi.ModTime(),
+		DiskContent: string(diskContent),
+		Content:     string(content),
 	}, nil
 }
 
