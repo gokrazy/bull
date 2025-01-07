@@ -46,6 +46,13 @@ func (p *page) IsGenerated() bool {
 	return strings.HasPrefix(p.PageName, bullPrefix)
 }
 
+func (p *page) Class() string {
+	if !p.IsGenerated() {
+		return "" // no extra class names
+	}
+	return "bull_gen_" + filepath.Base(p.PageName) // e.g. browse
+}
+
 func (p *page) URLPath() string {
 	return "/" + url.PathEscape(p.PageName)
 }

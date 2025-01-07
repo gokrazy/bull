@@ -7,7 +7,7 @@
 	
 	<li><a href="{{ .Page.URLPath }}"
 	       {{ if (and (.Page.AvailableAt .RequestPath)
-	                  (not (eq .Page.PageName "_bull/mostrecent"))) }}
+	                  (not (eq .Page.PageName "_bull/browse"))) }}
 	       class="active"
 	       {{ end }}
 	       >View page</a></li>
@@ -20,8 +20,8 @@
 	{{ else }}
 	<li>Edit page</li>
 	{{ end }}
-	<li><a id="bull_nav_mostrecent" href="/_bull/mostrecent"
-	       {{ if (eq .Page.PageName "_bull/mostrecent") }}
+	<li><a id="bull_nav_mostrecent" href="/_bull/browse?sort=modtime&sortorder=desc"
+	       {{ if (eq .Page.PageName "_bull/browse") }}
 	       class="active"
 	       {{ end }}
 	       ><span style="text-decoration: underline">M</span>ost recent</a></li>
@@ -39,7 +39,7 @@
 	
 	<li><a href="{{ .Page.URLPath }}"
 	       {{ if (and (.Page.AvailableAt .RequestPath)
-	                  (not (eq .Page.PageName "_bull/mostrecent"))) }}
+	                  (not (eq .Page.PageName "_bull/browse"))) }}
 	       class="active"
 	       {{ end }}
 	       >View</a></li>
@@ -52,8 +52,8 @@
 	{{ else }}
 	<li>Edit page</li>
 	{{ end }}
-	<li><a href="/_bull/mostrecent"
-	       {{ if (eq .Page.PageName "_bull/mostrecent") }}
+	<li><a href="/_bull/browse?sort=modtime&sortorder=desc"
+	       {{ if (eq .Page.PageName "_bull/browse") }}
 	       class="active"
 	       {{ end }}
 	       >Recent</a></li>

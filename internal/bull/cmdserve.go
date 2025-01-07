@@ -143,7 +143,7 @@ func (c *Customization) serve(args []string) error {
 		}
 		http.Handle(bullURLPrefix+"js/", http.StripPrefix(bullURLPrefix, http.FileServerFS(assetsFS)))
 	}
-	http.Handle("GET "+bullURLPrefix+"mostrecent", handleError(bull.mostrecent))
+	http.Handle("GET "+bullURLPrefix+"browse", handleError(bull.browse))
 	http.Handle("GET "+bullURLPrefix+"buildinfo", handleError(bull.buildinfo))
 	http.Handle("GET "+bullURLPrefix+"watch/{page...}", handleError(bull.watch))
 	http.Handle("POST "+bullURLPrefix+"save/{page...}", handleError(bull.save))

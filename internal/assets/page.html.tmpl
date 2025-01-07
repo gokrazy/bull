@@ -9,7 +9,7 @@
 	{{ template "lastupdate.html.tmpl" . }}
 	{{ end }}
 
-	<div class="bull_page">
+	<div class="bull_page {{ .Page.Class }}">
 	  {{ .Content }}
 	</div>
 
