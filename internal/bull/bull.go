@@ -123,6 +123,8 @@ Global command-line flags:
 		args = []string{"-help"}
 	}
 	switch verb {
+	case "version":
+		return nil // already printed above
 	case "serve", "server":
 		return c.serve(args)
 	case "mv":
