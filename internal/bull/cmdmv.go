@@ -14,8 +14,15 @@ import (
 const mvUsage = `
 mv - rename markdown page and update links
 
-Example:
+Syntax:
   % bull mv <src> <dest>
+
+src and dest can be either file names (ending in .md)
+or page names (without an .md suffix).
+
+Examples:
+  % bull mv simd Performance/SIMD
+  % bull mv simd.md Performance/SIMD.md
 `
 
 func (b *bullServer) replaceLinks(linker, oldpg, newpg string) error {
