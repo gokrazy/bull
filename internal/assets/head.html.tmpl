@@ -59,7 +59,26 @@
   body {
       overflow-y: scroll;
   }
-  
+
+  div.bull_edit {
+      height: 100%;
+  }
+
+  .bull_edit main {
+      /* full browser viewport height except for the header */
+      height: calc(100vh - 13rem);
+  }
+
+  #cm-goes-here {
+      resize: vertical;
+      overflow: auto;
+      height: 100% !important;
+  }
+
+  .cm-editor {
+      height: 100%;
+  }
+
   pre, code, .cm-content {
       font-family: 'Go Mono';
   }
@@ -154,19 +173,6 @@
       background-color: #eee;
   }
 
-  .bull_gen_browse th a,
-  .bull_gen_browse th a:visited {
-      color: #fff;
-      text-decoration: none;
-      padding: .25rem .5rem;
-      background-color: #555;
-  }
-
-  .bull_gen_browse th a:nth-child(1),
-  .bull_gen_browse th a:visited:nth-child(1) {
-      margin-left: 1rem;
-  }
-
   main th {
       background-color: #000;
       color: #fff;
@@ -176,10 +182,6 @@
   main th, main td {
       padding: .4rem;
       white-space: nowrap;
-  }
-
-  main th {
-      padding: .5rem .4rem;
   }
 
   main img {
@@ -256,6 +258,10 @@
       }
       #bull_mobilenav {
 	  display: none;
+      }
+
+      main>div:first-child {
+          width: 45rem;
       }
 
   }
