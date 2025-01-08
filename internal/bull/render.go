@@ -88,6 +88,17 @@ func (b *bullServer) serveStaticFile(w http.ResponseWriter, r *http.Request) err
 	if err != nil {
 		return err
 	}
+	if st.IsDir() {
+		q := url.Values{
+			"dir": []string{staticFn},
+		}
+		target := (&url.URL{
+			Path:     bullURLPrefix + "browse",
+			RawQuery: q.Encode(),
+		}).String()
+		http.Redirect(w, r, target, http.StatusFound)
+		return nil
+	}
 	http.ServeContent(w, r, staticFn, st.ModTime(), f)
 	return nil
 }

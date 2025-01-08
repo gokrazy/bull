@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strings"
 	"sync"
 )
 
@@ -28,6 +29,20 @@ func (b *bullServer) browse(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	readg.Wait()
+
+	dir := r.FormValue("dir")
+	if dir != "" {
+		prefix := dir + "/"
+		filtered := make([]page, 0, len(pages))
+		for _, page := range pages {
+			if !strings.HasPrefix(page.FileName, prefix) {
+				continue
+			}
+			filtered = append(filtered, page)
+		}
+		pages = filtered
+	}
+
 	sortorder := r.FormValue("sortorder")
 	if sortorder != "desc" &&
 		sortorder != "asc" &&
@@ -63,9 +78,14 @@ func (b *bullServer) browse(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	var buf bytes.Buffer
-	fmt.Fprintf(&buf, "# page browser\n")
+	if dir != "" {
+		fmt.Fprintf(&buf, "# page browser: %s\n", dir)
+	} else {
+		fmt.Fprintf(&buf, "# page browser\n")
+	}
 	fmt.Fprintf(&buf, "| file name [↑](/_bull/browse?sort=pagename) [↓](/_bull/browse?sort=pagename&sortorder=desc) | last modified [↑](/_bull/browse?sort=modtime) [↓](/_bull/browse?sort=modtime&sortorder=desc) |\n")
 	fmt.Fprintf(&buf, "|-----------|---------------|\n")
+	// TODO: link to .. if dir != ""
 	for _, pg := range pages {
 		fmt.Fprintf(&buf, "| [[%s]] | %s |\n",
 			pg.PageName,
