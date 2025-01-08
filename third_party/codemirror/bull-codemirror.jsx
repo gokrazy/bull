@@ -60,6 +60,8 @@ let editor = new EditorView({
     parent: document.getElementById('cm-goes-here')
 })
 
+editor.focus();
+
 // Inject the editor content into the <form> before submit
 document.getElementById('bull-save').onclick = function(event) {
     document.getElementById('bull-markdown').value = editor.state.doc.toString();
