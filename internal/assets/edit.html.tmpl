@@ -31,7 +31,7 @@
   <script type="text/javascript">
     const BullMarkdown = `{{ .MarkdownContent }}`;
   </script>
-  <script type="text/javascript" src="/_bull/js/bull-codemirror.bundle.js"></script>
+  <script type="text/javascript" src="/_bull/js/bull-codemirror.bundle.js?cachebust={{ call .StaticHashCodeMirror }}"></script>
 
   <script type="text/javascript">
     var u = new URL(document.URL);
@@ -46,7 +46,7 @@
     }
   </script>
 
-  <script src="/_bull/js/navedit.js" async></script>
+  <script src="/_bull/js/navedit.js?cachebust={{ call .StaticHash "js/navedit.js" }}" async></script>
 
 </body>
 </html>

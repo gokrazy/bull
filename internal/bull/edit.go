@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	thirdparty "github.com/gokrazy/bull/third_party"
 )
 
 func (b *bullServer) edit(w http.ResponseWriter, r *http.Request) error {
@@ -32,11 +34,13 @@ func (b *bullServer) edit(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	return b.executeTemplate(w, "edit.html.tmpl", struct {
-		RequestPath     string
-		ReadOnly        bool
-		Title           string
-		Page            *page
-		MarkdownContent string
+		RequestPath          string
+		ReadOnly             bool
+		Title                string
+		Page                 *page
+		MarkdownContent      string
+		StaticHash           func(string) string
+		StaticHashCodeMirror func() string
 	}{
 		RequestPath: r.URL.EscapedPath(),
 		Title:       pg.Abs(b.contentDir),
@@ -44,5 +48,9 @@ func (b *bullServer) edit(w http.ResponseWriter, r *http.Request) error {
 		// For editing, we need to use the page contents as stored on disk,
 		// without any customization post-processing.
 		MarkdownContent: pg.DiskContent,
+		StaticHash:      b.staticHash,
+		StaticHashCodeMirror: func() string {
+			return hashSum(thirdparty.BullCodemirror)
+		},
 	})
 }

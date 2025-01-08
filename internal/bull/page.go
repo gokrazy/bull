@@ -1,8 +1,6 @@
 package bull
 
 import (
-	"fmt"
-	"hash/fnv"
 	"io"
 	"net/http"
 	"net/url"
@@ -30,9 +28,7 @@ type page struct {
 }
 
 func (p *page) ContentHash() string {
-	h := fnv.New128()
-	h.Write([]byte(p.Content))
-	return fmt.Sprintf("%x", h.Sum(nil))
+	return hashSum([]byte(p.Content))
 }
 
 func (p *page) AvailableAt(encodedPath string) bool {

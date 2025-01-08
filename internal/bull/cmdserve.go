@@ -34,6 +34,11 @@ func defaultEditor() string {
 	return "textarea"
 }
 
+func cache(w http.ResponseWriter) {
+	w.Header().Set("Cache-Control", "public, max-age=604800, immutable")
+	w.Header().Set("Expires", time.Now().Add(7*24*time.Hour).Format(http.TimeFormat))
+}
+
 func (c *Customization) serve(args []string) error {
 	fset := flag.NewFlagSet("serve", flag.ExitOnError)
 	fset.Usage = usage(fset, serveUsage)
@@ -125,8 +130,7 @@ func (c *Customization) serve(args []string) error {
 	} {
 		basename := "go" + variant.name + ".ttf"
 		http.HandleFunc(bullURLPrefix+"gofont/"+basename, func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Cache-Control", "public, max-age=604800, immutable")
-			w.Header().Set("Expires", time.Now().Add(7*24*time.Hour).Format(http.TimeFormat))
+			cache(w)
 			http.ServeContent(w, r, basename, zeroModTime, bytes.NewReader(variant.content))
 		})
 	}
@@ -134,14 +138,18 @@ func (c *Customization) serve(args []string) error {
 		basename := "bull-codemirror.bundle.js"
 		http.HandleFunc(bullURLPrefix+"js/"+basename,
 			func(w http.ResponseWriter, r *http.Request) {
-				// TODO: set cache headers and include cache buster in html.tmpl
+				cache(w)
 				http.ServeContent(w, r, basename, zeroModTime, bytes.NewReader(thirdparty.BullCodemirror))
 			})
 		var assetsFS fs.FS = assets.FS
 		if static != nil {
 			assetsFS = static.FS()
 		}
-		http.Handle(bullURLPrefix+"js/", http.StripPrefix(bullURLPrefix, http.FileServerFS(assetsFS)))
+		http.Handle(bullURLPrefix+"js/", http.StripPrefix(bullURLPrefix,
+			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				cache(w)
+				http.FileServerFS(assetsFS).ServeHTTP(w, r)
+			})))
 	}
 	http.Handle("GET "+bullURLPrefix+"browse", handleError(bull.browse))
 	http.Handle("GET "+bullURLPrefix+"buildinfo", handleError(bull.buildinfo))

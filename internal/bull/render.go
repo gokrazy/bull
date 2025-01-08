@@ -4,11 +4,14 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"io"
+	"io/fs"
 	"net/http"
 	"net/url"
 	"os"
 	"time"
 
+	"github.com/gokrazy/bull/internal/assets"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
@@ -145,6 +148,23 @@ func (b *bullServer) renderBullMarkdown(w http.ResponseWriter, r *http.Request, 
 	return b.renderMarkdown(w, r, pg, buf.Bytes())
 }
 
+func (b *bullServer) staticHash(path string) string {
+	var assetsFS fs.FS = assets.FS
+	if b.static != nil {
+		assetsFS = b.static.FS()
+	}
+	f, err := assetsFS.Open(path)
+	if err != nil {
+		return fmt.Sprintf("BUG: %v", err)
+	}
+	defer f.Close()
+	h := quickhash()
+	if _, err := io.Copy(h, f); err != nil {
+		return fmt.Sprintf("Copy: %v", err)
+	}
+	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
 func (b *bullServer) renderMarkdown(w http.ResponseWriter, r *http.Request, pg *page, md []byte) error {
 	html := b.render(string(md))
 	return b.executeTemplate(w, "page.html.tmpl", struct {
@@ -154,6 +174,7 @@ func (b *bullServer) renderMarkdown(w http.ResponseWriter, r *http.Request, pg *
 		Page        *page
 		Content     template.HTML
 		ContentHash string
+		StaticHash  func(string) string
 	}{
 		RequestPath: r.URL.EscapedPath(),
 		ReadOnly:    b.editor == "",
@@ -161,5 +182,6 @@ func (b *bullServer) renderMarkdown(w http.ResponseWriter, r *http.Request, pg *
 		Page:        pg,
 		Content:     template.HTML(html),
 		ContentHash: pg.ContentHash(),
+		StaticHash:  b.staticHash,
 	})
 }
