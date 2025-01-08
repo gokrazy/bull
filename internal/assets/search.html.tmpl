@@ -66,7 +66,7 @@
 	searchresults.innerHTML = '<i>Searching…</i>';
 	console.log('should start search now:', lastq);
 	var u = new URL(window.location);
-	u.hash = lastq;
+	u.hash = '#' + lastq;
 	window.location = u.toString();
 	var p = new URLSearchParams();
 	p.set('q', lastq);
