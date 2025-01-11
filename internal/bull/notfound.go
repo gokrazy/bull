@@ -24,7 +24,7 @@ func (b *bullServer) indexNotFound() (string, error) {
 		}
 	}
 	if hasPages {
-		return "Check out the [most recent](/_bull/mostrecent) pages for a list of pages.", nil
+		return "Check out the [directory browser](/_bull/browse) pages for a list of pages.", nil
 	}
 
 	return fmt.Sprintf(`bull did not find any pages (markdown files) in content directory
