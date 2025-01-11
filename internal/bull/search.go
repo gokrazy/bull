@@ -27,6 +27,7 @@ func (b *bullServer) search(w http.ResponseWriter, r *http.Request) error {
 		RequestPath   string
 		Page          *page
 		ReadOnly      bool
+		Query         string
 	}{
 		URLPrefix:     b.root,
 		URLBullPrefix: b.URLBullPrefix(),
@@ -36,6 +37,7 @@ func (b *bullServer) search(w http.ResponseWriter, r *http.Request) error {
 			PageName: pageName,
 			FileName: page2desired(pageName),
 		},
+		Query: r.FormValue("q"),
 	})
 }
 

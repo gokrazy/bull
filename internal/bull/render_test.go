@@ -21,6 +21,10 @@ func TestRender(t *testing.T) {
 -- test.md --
 hello world
 
+This page is #genius and should receive an award!
+
+This line ends in a #endinghashtag
+
 [markdown link](/maybe%20consider%3F)
 
 wiki link: [[maybe consider?]]
@@ -42,6 +46,7 @@ something profound
 		t.Fatal(err)
 	}
 	bull := &bullServer{
+		root:            "/",
 		content:         content,
 		contentDir:      tmp,
 		contentSettings: cs,
@@ -89,6 +94,15 @@ something profound
 			}
 			targets[submatch[1]] = true
 		}
+
+		if want := "/_bull/search?q=%23genius"; !targets[want] {
+			t.Errorf("GET /: response does not link to %q", want)
+		}
+
+		if want := "/_bull/search?q=%23endinghashtag"; !targets[want] {
+			t.Errorf("GET /: response does not link to %q", want)
+		}
+
 		want := "/maybe%20consider%3F"
 		if !targets[want] {
 			t.Errorf("GET /: response does not link to %q", want)

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gokrazy/bull/internal/assets"
+	"github.com/gokrazy/bull/internal/hashtag"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
@@ -55,6 +56,9 @@ func (b *bullServer) converter() goldmark.Markdown {
 					root:        b.root,
 					contentRoot: b.content,
 				},
+			},
+			&hashtag.Extender{
+				URLBullPrefix: b.URLBullPrefix(),
 			},
 		),
 		goldmark.WithParserOptions(parserOpts...),
