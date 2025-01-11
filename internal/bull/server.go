@@ -25,6 +25,11 @@ type bullServer struct {
 	static          *os.Root // static assets (for development)
 	idx             *idx
 	editor          string
+	root            string
+}
+
+func (b *bullServer) URLPrefix() string {
+	return b.root + bullPrefix
 }
 
 // Initialize this bull server: ensure embedded templates can be parsed,

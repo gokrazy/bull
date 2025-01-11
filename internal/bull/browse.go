@@ -13,6 +13,7 @@ import (
 )
 
 type browse struct {
+	urlPrefix string
 	dir       string
 	sortby    string
 	sortorder string
@@ -120,7 +121,7 @@ func (br *browse) browseDirLink(dir string) string {
 		"sortorder": []string{br.sortorder},
 	}
 	return (&url.URL{
-		Path:     bullURLPrefix + "browse",
+		Path:     br.urlPrefix + "browse",
 		RawQuery: q.Encode(),
 	}).String()
 }
@@ -173,6 +174,7 @@ func (b *bullServer) browse(w http.ResponseWriter, r *http.Request) error {
 	readg.Wait()
 
 	br := browse{
+		urlPrefix: b.URLPrefix(),
 		dir:       r.FormValue("dir"),
 		sortby:    r.FormValue("sort"),
 		sortorder: r.FormValue("sortorder"),

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gokrazy/bull/internal/assets"
@@ -55,9 +56,21 @@ func (c *Customization) serve(args []string) error {
 		defaultEditor(),
 		"if empty, editing files is disabled (read-only mode). one of 'textarea' (HTML textarea) or 'codemirror' (CodeMirror JavaScript editor)")
 
+	root := fset.String("root",
+		"/",
+		"under which path should bull serve its handlers? useful for serving under a non-root location, e.g. https://michael.stapelberg.ch/garden/")
+
 	if err := fset.Parse(args); err != nil {
 		return err
 	}
+
+	if *root == "" {
+		*root = "/"
+	}
+	if !strings.HasSuffix(*root, "/") {
+		*root += "/"
+	}
+
 	content, err := os.OpenRoot(*contentDir)
 	if err != nil {
 		return err
@@ -95,6 +108,7 @@ func (c *Customization) serve(args []string) error {
 		contentSettings: cs,
 		static:          static,
 		editor:          *editor,
+		root:            *root,
 	}
 	if err := bull.init(); err != nil {
 		return err
@@ -115,8 +129,8 @@ func (c *Customization) serve(args []string) error {
 
 	// TODO: serve a default favicon if there is none in the content directory
 
-	// TODO: should the program work at non-rooted URLs?
-	http.Handle("/{page...}", handleError(bull.handleRender))
+	bullURLPrefix := bull.URLPrefix()
+	http.Handle(bull.root+"{page...}", handleError(bull.handleRender))
 	http.Handle(bullURLPrefix+"edit/{page...}", handleError(bull.edit))
 
 	var zeroModTime time.Time

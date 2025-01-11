@@ -12,10 +12,7 @@ import (
 	"github.com/gokrazy/bull"
 )
 
-const (
-	bullPrefix    = "_bull/"
-	bullURLPrefix = "/_bull/"
-)
+const bullPrefix = "_bull/"
 
 func defaultContentDir() string {
 	if v := os.Getenv("BULL_CONTENT"); v != "" {
