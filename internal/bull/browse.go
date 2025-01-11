@@ -191,11 +191,22 @@ func (b *bullServer) browse(w http.ResponseWriter, r *http.Request) error {
 	} else {
 		fmt.Fprintf(&buf, "# directory browser\n")
 	}
-	fmt.Fprintf(&buf, "| page name [↑](%[1]s/browse?sort=pagename) [↓](%[1]s/browse?sort=pagename&sortorder=desc) | last modified [↑](%[1]s/browse?sort=modtime) [↓](%[1]s/browse?sort=modtime&sortorder=desc) |\n", br.urlPrefix)
+	fmt.Fprintf(&buf, "| page name [↑](%[1]s/browse?dir=%[2]s&sort=pagename) [↓](%[1]s/browse?dir=%[2]s&sort=pagename&sortorder=desc) | last modified [↑](%[1]s/browse?dir=%[2]s&sort=modtime) [↓](%[1]s/browse?dir=%[2]s&sort=modtime&sortorder=desc) |\n", br.urlPrefix, br.dir)
 	fmt.Fprintf(&buf, "|-----------|---------------|\n")
 	// TODO: link to .. if dir != ""
 	for _, line := range br.browseTable() {
 		buf.Write([]byte(line))
 	}
-	return b.renderBullMarkdown(w, r, "browse", buf)
+	pg := &page{
+		Class:    "bull_gen_browse",
+		Exists:   true,
+		PageName: br.dir,
+		FileName: page2desired(br.dir),
+		Content:  buf.String(),
+		ModTime:  time.Now(),
+	}
+	if pg.PageName == "" {
+		pg.PageName = bullPrefix + "browse"
+	}
+	return b.renderMarkdown(w, r, pg, buf.Bytes())
 }

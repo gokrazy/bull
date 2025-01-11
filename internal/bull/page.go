@@ -25,6 +25,12 @@ type page struct {
 	// instead of byte slices ([]byte, modifiable).
 	DiskContent string
 	Content     string
+
+	Class string // extra CSS class (can be empty)
+}
+
+func (p *page) NameComponents() []string {
+	return strings.Split(p.PageName, "/")
 }
 
 func (p *page) ContentHash() string {
@@ -40,13 +46,6 @@ func (p *page) AvailableAt(encodedPath string) bool {
 
 func (p *page) IsGenerated() bool {
 	return strings.HasPrefix(p.PageName, bullPrefix)
-}
-
-func (p *page) Class() string {
-	if !p.IsGenerated() {
-		return "" // no extra class names
-	}
-	return "bull_gen_" + filepath.Base(p.PageName) // e.g. browse
 }
 
 func (p *page) URLPath() string {

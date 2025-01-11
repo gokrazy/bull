@@ -44,6 +44,12 @@ func (b *bullServer) init() error {
 func tmplFromFS(fs fs.FS) (*template.Template, error) {
 	return template.New("").Funcs(template.FuncMap{
 		"hasPrefix": strings.HasPrefix,
+		"lastidx": func(components []string) int {
+			return len(components) - 1
+		},
+		"componentsUntil": func(components []string, idx int) string {
+			return strings.Join(components[:idx+1], "/")
+		},
 	}).ParseFS(fs, "*.html.tmpl")
 }
 

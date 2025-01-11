@@ -4,10 +4,25 @@
   {{ template "nav.html.tmpl" . }}
   <main>
     <div>
-	{{ if .Page.Exists }}
-	<h1 class="bull_title">{{ .Page.PageName }}</h1>
-	{{ template "lastupdate.html.tmpl" . }}
-	{{ end }}
+        {{ if .Page.Exists }}
+          {{ if .Page.IsGenerated }}
+          <h1 class="bull_title">{{ .Page.PageName }}</h1>
+          {{ else }}
+          <h1 class="bull_title">
+          {{ $components := .Page.NameComponents }}
+          {{ $last := lastidx $components }}
+          {{ range $idx, $dir := $components }}
+          {{ if (eq $idx $last) }}
+          {{ $dir }}
+          {{ else }}
+          {{ $path := (componentsUntil $components $idx) }}
+          <a href="{{ $.URLBullPrefix }}browse?dir={{ $path }}">{{ $dir }}</a> /
+          {{ end }}
+          {{ end }}
+        </h1>
+        {{ end }}
+        {{ template "lastupdate.html.tmpl" . }}
+        {{ end }}
 
 	<div class="bull_page {{ .Page.Class }}">
 	  {{ .Content }}
