@@ -50,6 +50,11 @@ func (p *page) Class() string {
 }
 
 func (p *page) URLPath() string {
+	if p.IsGenerated() {
+		// Do not escape slashes to %2f for generated pages;
+		// they are only served when accessed with a slash.
+		return p.PageName
+	}
 	return url.PathEscape(p.PageName)
 }
 
