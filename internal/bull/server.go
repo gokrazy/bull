@@ -28,7 +28,7 @@ type bullServer struct {
 	root            string
 }
 
-func (b *bullServer) URLPrefix() string {
+func (b *bullServer) URLBullPrefix() string {
 	return b.root + bullPrefix
 }
 

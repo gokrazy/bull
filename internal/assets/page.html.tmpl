@@ -20,7 +20,7 @@
 
   <script type="text/javascript">
     var u = new URL(document.URL);
-    u.pathname = '/_bull/watch' + u.pathname;
+    u.pathname = '{{ .URLBullPrefix }}watch/' + u.pathname.substr('{{ .URLPrefix }}'.length);
     var params = new URLSearchParams();
     params.set('hash', '{{ .ContentHash }}');
     u.search = params.toString();
@@ -33,7 +33,7 @@
     }
   </script>
 
-  <script src="/_bull/js/nav.js?cachebust={{ call .StaticHash "js/nav.js" }}" async></script>
+  <script src="{{ .URLBullPrefix }}js/nav.js?cachebust={{ call .StaticHash "js/nav.js" }}" async></script>
 
 </body>
 </html>

@@ -129,9 +129,9 @@ func (c *Customization) serve(args []string) error {
 
 	// TODO: serve a default favicon if there is none in the content directory
 
-	bullURLPrefix := bull.URLPrefix()
+	urlBullPrefix := bull.URLBullPrefix()
 	http.Handle(bull.root+"{page...}", handleError(bull.handleRender))
-	http.Handle(bullURLPrefix+"edit/{page...}", handleError(bull.edit))
+	http.Handle(urlBullPrefix+"edit/{page...}", handleError(bull.edit))
 
 	var zeroModTime time.Time
 	for _, variant := range []struct {
@@ -143,14 +143,14 @@ func (c *Customization) serve(args []string) error {
 		{"mono", gomono.TTF},
 	} {
 		basename := "go" + variant.name + ".ttf"
-		http.HandleFunc(bullURLPrefix+"gofont/"+basename, func(w http.ResponseWriter, r *http.Request) {
+		http.HandleFunc(urlBullPrefix+"gofont/"+basename, func(w http.ResponseWriter, r *http.Request) {
 			cache(w)
 			http.ServeContent(w, r, basename, zeroModTime, bytes.NewReader(variant.content))
 		})
 	}
 	{
 		basename := "bull-codemirror.bundle.js"
-		http.HandleFunc(bullURLPrefix+"js/"+basename,
+		http.HandleFunc(urlBullPrefix+"js/"+basename,
 			func(w http.ResponseWriter, r *http.Request) {
 				cache(w)
 				http.ServeContent(w, r, basename, zeroModTime, bytes.NewReader(thirdparty.BullCodemirror))
@@ -159,18 +159,18 @@ func (c *Customization) serve(args []string) error {
 		if static != nil {
 			assetsFS = static.FS()
 		}
-		http.Handle(bullURLPrefix+"js/", http.StripPrefix(bullURLPrefix,
+		http.Handle(urlBullPrefix+"js/", http.StripPrefix(urlBullPrefix,
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				cache(w)
 				http.FileServerFS(assetsFS).ServeHTTP(w, r)
 			})))
 	}
-	http.Handle("GET "+bullURLPrefix+"browse", handleError(bull.browse))
-	http.Handle("GET "+bullURLPrefix+"buildinfo", handleError(bull.buildinfo))
-	http.Handle("GET "+bullURLPrefix+"watch/{page...}", handleError(bull.watch))
-	http.Handle("POST "+bullURLPrefix+"save/{page...}", handleError(bull.save))
-	http.Handle("GET "+bullURLPrefix+"search", handleError(bull.search))
-	http.Handle("GET "+bullURLPrefix+"_search", handleError(bull.searchAPI))
+	http.Handle("GET "+urlBullPrefix+"browse", handleError(bull.browse))
+	http.Handle("GET "+urlBullPrefix+"buildinfo", handleError(bull.buildinfo))
+	http.Handle("GET "+urlBullPrefix+"watch/{page...}", handleError(bull.watch))
+	http.Handle("POST "+urlBullPrefix+"save/{page...}", handleError(bull.save))
+	http.Handle("GET "+urlBullPrefix+"search", handleError(bull.search))
+	http.Handle("GET "+urlBullPrefix+"_search", handleError(bull.searchAPI))
 
 	ln, err := net.Listen("tcp", *listenAddr)
 	if err != nil {

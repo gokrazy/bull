@@ -23,6 +23,7 @@ import (
 )
 
 type resolver struct {
+	root        string
 	contentRoot *os.Root
 }
 
@@ -33,7 +34,7 @@ func (r *resolver) ResolveWikilink(n *wikilink.Node) (destination []byte, err er
 	//
 	// This allows creating pages by linking to them, following the link,
 	// then clicking Create page in the top menu bar.
-	return append([]byte{'/'}, []byte(url.PathEscape(string(n.Target)))...), nil
+	return append([]byte(r.root), []byte(url.PathEscape(string(n.Target)))...), nil
 }
 
 func (b *bullServer) converter() goldmark.Markdown {
@@ -51,6 +52,7 @@ func (b *bullServer) converter() goldmark.Markdown {
 			extension.GFM,
 			&wikilink.Extender{
 				Resolver: &resolver{
+					root:        b.root,
 					contentRoot: b.content,
 				},
 			},
@@ -93,7 +95,7 @@ func (b *bullServer) serveStaticFile(w http.ResponseWriter, r *http.Request) err
 			"dir": []string{staticFn},
 		}
 		target := (&url.URL{
-			Path:     b.URLPrefix() + "browse",
+			Path:     b.URLBullPrefix() + "browse",
 			RawQuery: q.Encode(),
 		}).String()
 		http.Redirect(w, r, target, http.StatusFound)
@@ -179,20 +181,24 @@ func (b *bullServer) staticHash(path string) string {
 func (b *bullServer) renderMarkdown(w http.ResponseWriter, r *http.Request, pg *page, md []byte) error {
 	html := b.render(string(md))
 	return b.executeTemplate(w, "page.html.tmpl", struct {
-		RequestPath string
-		ReadOnly    bool
-		Title       string
-		Page        *page
-		Content     template.HTML
-		ContentHash string
-		StaticHash  func(string) string
+		URLPrefix     string
+		URLBullPrefix string
+		RequestPath   string
+		ReadOnly      bool
+		Title         string
+		Page          *page
+		Content       template.HTML
+		ContentHash   string
+		StaticHash    func(string) string
 	}{
-		RequestPath: r.URL.EscapedPath(),
-		ReadOnly:    b.editor == "",
-		Title:       pg.Abs(b.contentDir),
-		Page:        pg,
-		Content:     template.HTML(html),
-		ContentHash: pg.ContentHash(),
-		StaticHash:  b.staticHash,
+		URLPrefix:     b.root,
+		URLBullPrefix: b.URLBullPrefix(),
+		RequestPath:   r.URL.EscapedPath(),
+		ReadOnly:      b.editor == "",
+		Title:         pg.Abs(b.contentDir),
+		Page:          pg,
+		Content:       template.HTML(html),
+		ContentHash:   pg.ContentHash(),
+		StaticHash:    b.staticHash,
 	})
 }

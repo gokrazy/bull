@@ -24,7 +24,7 @@ func (b *bullServer) indexNotFound() (string, error) {
 		}
 	}
 	if hasPages {
-		return "Check out the [directory browser](/_bull/browse) pages for a list of pages.", nil
+		return fmt.Sprintf("Check out the [directory browser](%sbrowse) pages for a list of pages.", b.URLBullPrefix()), nil
 	}
 
 	return fmt.Sprintf(`bull did not find any pages (markdown files) in content directory
@@ -33,8 +33,8 @@ func (b *bullServer) indexNotFound() (string, error) {
 bull works with pages, so maybe you would like to:
 
 * Start bull with a different content directory (`+"`-content`"+` flag).
-* [Create an index page](/_bull/edit/index) to get started from scratch.
-`, b.contentDir, len(dirents)), nil
+* [Create an index page](%sedit/index) to get started from scratch.
+`, b.contentDir, len(dirents), b.URLBullPrefix()), nil
 }
 
 func (b *bullServer) renderNotFound(w http.ResponseWriter, r *http.Request) error {

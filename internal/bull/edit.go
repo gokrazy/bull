@@ -34,6 +34,8 @@ func (b *bullServer) edit(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	return b.executeTemplate(w, "edit.html.tmpl", struct {
+		URLPrefix            string
+		URLBullPrefix        string
 		RequestPath          string
 		ReadOnly             bool
 		Title                string
@@ -42,9 +44,11 @@ func (b *bullServer) edit(w http.ResponseWriter, r *http.Request) error {
 		StaticHash           func(string) string
 		StaticHashCodeMirror func() string
 	}{
-		RequestPath: r.URL.EscapedPath(),
-		Title:       pg.Abs(b.contentDir),
-		Page:        pg,
+		URLPrefix:     b.root,
+		URLBullPrefix: b.URLBullPrefix(),
+		RequestPath:   r.URL.EscapedPath(),
+		Title:         pg.Abs(b.contentDir),
+		Page:          pg,
 		// For editing, we need to use the page contents as stored on disk,
 		// without any customization post-processing.
 		MarkdownContent: pg.DiskContent,

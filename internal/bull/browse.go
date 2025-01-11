@@ -174,7 +174,7 @@ func (b *bullServer) browse(w http.ResponseWriter, r *http.Request) error {
 	readg.Wait()
 
 	br := browse{
-		urlPrefix: b.URLPrefix(),
+		urlPrefix: b.URLBullPrefix(),
 		dir:       r.FormValue("dir"),
 		sortby:    r.FormValue("sort"),
 		sortorder: r.FormValue("sortorder"),
@@ -191,7 +191,7 @@ func (b *bullServer) browse(w http.ResponseWriter, r *http.Request) error {
 	} else {
 		fmt.Fprintf(&buf, "# directory browser\n")
 	}
-	fmt.Fprintf(&buf, "| page name [↑](/_bull/browse?sort=pagename) [↓](/_bull/browse?sort=pagename&sortorder=desc) | last modified [↑](/_bull/browse?sort=modtime) [↓](/_bull/browse?sort=modtime&sortorder=desc) |\n")
+	fmt.Fprintf(&buf, "| page name [↑](%[1]s/browse?sort=pagename) [↓](%[1]s/browse?sort=pagename&sortorder=desc) | last modified [↑](%[1]s/browse?sort=modtime) [↓](%[1]s/browse?sort=modtime&sortorder=desc) |\n", br.urlPrefix)
 	fmt.Fprintf(&buf, "|-----------|---------------|\n")
 	// TODO: link to .. if dir != ""
 	for _, line := range br.browseTable() {

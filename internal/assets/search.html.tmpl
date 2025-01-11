@@ -8,7 +8,7 @@
 
       <div class="bull_page">
 
-	<form action="/_bull/search" method="post" id="bull_searchform">
+	<form action="{{ .URLBullPrefix }}search" method="post" id="bull_searchform">
 	  <input type="text" name="q" id="bull_q" placeholder="enter search query here" autofocus="autofocus">
 	  <input type="submit" id="bull_submit">
 	</form>
@@ -34,7 +34,7 @@
 	var html = '<p>Search results: ' + results.length + '</p><ul>';
 	for (result of results) {
 	    var u = new URL(window.location);
-	    u.pathname = '/' + result.page_name;
+	    u.pathname = '{{ .URLPrefix }}' + result.page_name;
 	    u.hash = '';
 	    html += '<li><a href="' + u.toString() + '">' + result.page_name + '</a><br><pre>' + escapeHtml(result.matching_lines.join("\n")) + "</pre></li>\n";
 	}
@@ -70,7 +70,7 @@
 	window.location = u.toString();
 	var p = new URLSearchParams();
 	p.set('q', lastq);
-	resultstream = new EventSource('/_bull/_search?'+p.toString());
+	resultstream = new EventSource('{{ .URLBullPrefix }}_search?'+p.toString());
 	var results = [];
 	resultstream.onmessage = function(e) {
 	    const chunk = JSON.parse(e.data);
@@ -111,7 +111,7 @@
     }
   </script>
 
-  <script src="/_bull/js/nav.js"></script>
+  <script src="'{{ .URLBullPrefix }}js/nav.js"></script>
 
 </body>
 </html>

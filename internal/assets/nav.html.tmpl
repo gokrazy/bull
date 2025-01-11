@@ -1,32 +1,32 @@
 <header id="bull_navbar">
-  <a id="bull_nav_index" href="/" style="font-size: 200%; margin-left: .5em">🐮</a>
+  <a id="bull_nav_index" href="{{ .URLPrefix }}" style="font-size: 200%; margin-left: .5em">🐮</a>
   <div>
-    <a href="/"><h1>bull</h1></a>
+    <a href="{{ .URLPrefix }}"><h1>bull</h1></a>
     <nav id="bull_desktopnav">
       <ul>
 	
-	<li><a href="{{ .Page.URLPath }}"
+	<li><a href="{{ .URLPrefix }}{{ .Page.URLPath }}"
 	       {{ if (and (.Page.AvailableAt .RequestPath)
 	                  (not (eq .Page.PageName "_bull/browse"))) }}
 	       class="active"
 	       {{ end }}
 	       >View page</a></li>
 	{{ if (and (not .Page.IsGenerated) (not .ReadOnly)) }}
-	<li><a id="bull_nav_edit" href="/_bull/edit{{ .Page.URLPath }}"
-	       {{ if (hasPrefix .RequestPath "/_bull/edit/") }}
+	<li><a id="bull_nav_edit" href="{{ .URLBullPrefix }}edit/{{ .Page.URLPath }}"
+	       {{ if (hasPrefix .RequestPath "{{ .URLBullPrefix }}edit/") }}
 	       class="active"
 	       {{ end }}
 	       >{{ if (not .Page.Exists) }}Create page{{ else }}<span style="text-decoration: underline">E</span>dit page{{ end }}</a></li>
 	{{ else }}
 	<li>Edit page</li>
 	{{ end }}
-	<li><a id="bull_nav_mostrecent" href="/_bull/browse?sort=modtime&sortorder=desc"
+	<li><a id="bull_nav_mostrecent" href="{{ .URLBullPrefix }}browse?sort=modtime&sortorder=desc"
 	       {{ if (eq .Page.PageName "_bull/browse") }}
 	       class="active"
 	       {{ end }}
 	       ><span style="text-decoration: underline">M</span>ost recent</a></li>
 
-	<li><a id="bull_nav_search" href="/_bull/search"
+	<li><a id="bull_nav_search" href="{{ .URLBullPrefix }}search"
 	       {{ if (eq .Page.PageName "_bull/search") }}
 	       class="active"
 	       {{ end }}
@@ -37,27 +37,27 @@
     <nav id="bull_mobilenav">
       <ul>
 	
-	<li><a href="{{ .Page.URLPath }}"
+	<li><a href="{{ .URLPrefix}}{{ .Page.URLPath }}"
 	       {{ if (and (.Page.AvailableAt .RequestPath)
 	                  (not (eq .Page.PageName "_bull/browse"))) }}
 	       class="active"
 	       {{ end }}
 	       >View</a></li>
 	{{ if (and (not .Page.IsGenerated) (not .ReadOnly)) }}
-	<li><a href="/_bull/edit{{ .Page.URLPath }}"
-	       {{ if (hasPrefix .RequestPath "/_bull/edit/") }}
+	<li><a href="{{ .URLBullPrefix }}edit/{{ .Page.URLPath }}"
+	       {{ if (hasPrefix .RequestPath "{{ .URLBullPrefix }}edit/") }}
 	       class="active"
 	       {{ end }}
 	       >Edit</a></li>
 	{{ else }}
 	<li>Edit page</li>
 	{{ end }}
-	<li><a href="/_bull/browse?sort=modtime&sortorder=desc"
+	<li><a href="{{ .URLBullPrefix }}browse?sort=modtime&sortorder=desc"
 	       {{ if (eq .Page.PageName "_bull/browse") }}
 	       class="active"
 	       {{ end }}
 	       >Recent</a></li>
-	<li><a href="/_bull/search"
+	<li><a href="{{ .URLBullPrefix }}search"
 	       {{ if (eq .Page.PageName "_bull/search") }}
 	       class="active"
 	       {{ end }}

@@ -15,7 +15,7 @@
 
 	<!-- TODO: implement -editor=textarea -->
 
-	<form action="/_bull/save/{{ .Page.PageName }}" method="post">
+	<form action="{{ .URLBullPrefix }}save/{{ .Page.PageName }}" method="post">
 	  <input type="hidden" id="bull-markdown" name="markdown">
 	  <input type="submit" id="bull-save" value="save page (ctrl/meta+s)">
 	</form>
@@ -31,11 +31,11 @@
   <script type="text/javascript">
     const BullMarkdown = `{{ .MarkdownContent }}`;
   </script>
-  <script type="text/javascript" src="/_bull/js/bull-codemirror.bundle.js?cachebust={{ call .StaticHashCodeMirror }}"></script>
+  <script type="text/javascript" src="{{ .URLBullPrefix }}js/bull-codemirror.bundle.js?cachebust={{ call .StaticHashCodeMirror }}"></script>
 
   <script type="text/javascript">
     var u = new URL(document.URL);
-    var updates = new EventSource('/_bull/watch' + u.pathname);
+    var updates = new EventSource('{{ .URLBullPrefix }}watch' + u.pathname);
     window.onbeforeunload = function() { updates.close(); };
     updates.onmessage = function(e) {
 	//const update = JSON.parse(e.data)
@@ -46,7 +46,7 @@
     }
   </script>
 
-  <script src="/_bull/js/navedit.js?cachebust={{ call .StaticHash "js/navedit.js" }}" async></script>
+  <script src="{{ .URLBullPrefix }}js/navedit.js?cachebust={{ call .StaticHash "js/navedit.js" }}" async></script>
 
 </body>
 </html>

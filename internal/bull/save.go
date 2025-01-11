@@ -51,6 +51,6 @@ func (b *bullServer) save(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	http.Redirect(w, r, "/"+pageName, http.StatusFound)
+	http.Redirect(w, r, b.root+pageName, http.StatusFound)
 	return nil
 }

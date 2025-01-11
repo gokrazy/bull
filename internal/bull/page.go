@@ -35,7 +35,7 @@ func (p *page) AvailableAt(encodedPath string) bool {
 	if p.PageName == "index" {
 		return encodedPath == "/" || encodedPath == "/index"
 	}
-	return encodedPath == p.URLPath()
+	return encodedPath == "/"+p.URLPath()
 }
 
 func (p *page) IsGenerated() bool {
@@ -50,7 +50,7 @@ func (p *page) Class() string {
 }
 
 func (p *page) URLPath() string {
-	return "/" + url.PathEscape(p.PageName)
+	return url.PathEscape(p.PageName)
 }
 
 var homeDir = os.Getenv("HOME")

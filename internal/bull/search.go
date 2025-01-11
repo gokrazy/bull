@@ -21,13 +21,17 @@ func (b *bullServer) search(w http.ResponseWriter, r *http.Request) error {
 	// i.e. POST /_bull/search handler
 	const pageName = bullPrefix + "search"
 	return b.executeTemplate(w, "search.html.tmpl", struct {
-		Title       string
-		RequestPath string
-		Page        *page
-		ReadOnly    bool
+		URLPrefix     string
+		URLBullPrefix string
+		Title         string
+		RequestPath   string
+		Page          *page
+		ReadOnly      bool
 	}{
-		Title:       "search",
-		RequestPath: r.URL.EscapedPath(),
+		URLPrefix:     b.root,
+		URLBullPrefix: b.URLBullPrefix(),
+		Title:         "search",
+		RequestPath:   r.URL.EscapedPath(),
 		Page: &page{
 			PageName: pageName,
 			FileName: page2desired(pageName),
