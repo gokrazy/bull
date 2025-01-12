@@ -32,7 +32,7 @@ func (b *bullServer) indexNotFound() (string, error) {
 
 bull works with pages, so maybe you would like to:
 
-* Start bull with a different content directory (`+"`-content`"+` flag).
+* Start bull with a different content directory (`+"`--content`"+` flag).
 * [Create an index page](%sedit/index) to get started from scratch.
 `, b.contentDir, len(dirents), b.URLBullPrefix()), nil
 }

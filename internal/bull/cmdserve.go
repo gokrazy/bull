@@ -80,7 +80,7 @@ func (c *Customization) serve(args []string) error {
 	// directory and home directory are truly identical, just checks
 	// whether their names are the same.
 	if filepath.Clean(content.Name()) == filepath.Clean(os.Getenv("HOME")) {
-		log.Printf("WARNING: You are running bull in your home directory, which may contain many files. You might want to start bull in a smaller directory of markdown files (or set the -content flag).")
+		log.Printf("WARNING: You are running bull in your home directory, which may contain many files. You might want to start bull in a smaller directory of markdown files (or set the --content flag).")
 	}
 
 	if _, err := content.Stat("_bull"); err == nil {
