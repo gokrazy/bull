@@ -10,6 +10,7 @@ require (
 	golang.org/x/image v0.23.0
 	golang.org/x/sync v0.10.0
 	golang.org/x/tools v0.28.0
+	mvdan.cc/xurls/v2 v2.6.0
 )
 
 require (

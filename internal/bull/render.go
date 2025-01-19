@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gokrazy/bull/internal/assets"
@@ -21,6 +22,7 @@ import (
 	"github.com/yuin/goldmark/renderer/html"
 	"github.com/yuin/goldmark/text"
 	"go.abhg.dev/goldmark/wikilink"
+	"mvdan.cc/xurls/v2"
 )
 
 type resolver struct {
@@ -39,8 +41,6 @@ func (r *resolver) ResolveWikilink(n *wikilink.Node) (destination []byte, err er
 }
 
 func (b *bullServer) converter() goldmark.Markdown {
-	// TODO: Set up autolinking for bare URLs (like golang.org):
-	// https://github.com/yuin/goldmark/blob/master/README.md#linkify-extension
 	var parserOpts []parser.Option
 	parserOpts = append(parserOpts, parser.WithAutoHeadingID())
 	var rendererOpts []renderer.Option
@@ -50,7 +50,15 @@ func (b *bullServer) converter() goldmark.Markdown {
 	}
 	return goldmark.New(
 		goldmark.WithExtensions(
-			extension.GFM,
+			// extension.GFM is defined as
+			// Linkify, Table, Strikethrough and TaskList
+			// We need to pass custom options to Linkify.
+			extension.NewLinkify(
+				extension.WithLinkifyAllowedProtocols([]string{""}),
+				extension.WithLinkifyURLRegexp(xurls.Relaxed())),
+			extension.Table,
+			extension.Strikethrough,
+			extension.TaskList,
 			&wikilink.Extender{
 				Resolver: &resolver{
 					root:        b.root,
@@ -68,15 +76,41 @@ func (b *bullServer) converter() goldmark.Markdown {
 
 func (b *bullServer) renderMD(md string) ast.Node {
 	converter := b.converter()
-	p := converter.Parser()
-	return p.Parse(text.NewReader([]byte(md)))
+	source := []byte(md)
+	doc := converter.Parser().Parse(text.NewReader(source))
+
+	// Make the URL protocol default to http:// for naked links
+	// like go.dev/cl/641655
+	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if !entering {
+			return ast.WalkContinue, nil
+		}
+		if al, ok := n.(*ast.AutoLink); ok && al.Protocol == nil {
+			u := string(al.URL(source))
+			if !strings.HasPrefix(u, "http://") &&
+				!strings.HasPrefix(u, "https://") {
+				al.Protocol = []byte("http")
+			}
+		}
+		return ast.WalkContinue, nil
+	})
+
+	if b.customization != nil {
+		if app := b.customization.AfterPageParse; app != nil {
+			doc = app(doc)
+		}
+	}
+
+	return doc
 }
 
 func (b *bullServer) render(md string) string {
 	var buf bytes.Buffer
 
+	doc := b.renderMD(md)
 	converter := b.converter()
-	if err := converter.Convert([]byte(md), &buf); err != nil {
+	err := converter.Renderer().Render(&buf, []byte(md), doc)
+	if err != nil {
 		// TODO: error page template
 		return "goldmark.Convert: " + err.Error()
 	}
