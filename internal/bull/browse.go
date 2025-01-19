@@ -191,7 +191,7 @@ func (b *bullServer) browse(w http.ResponseWriter, r *http.Request) error {
 	} else {
 		fmt.Fprintf(&buf, "# directory browser\n")
 	}
-	fmt.Fprintf(&buf, "| page name [↑](%[1]s/browse?dir=%[2]s&sort=pagename) [↓](%[1]s/browse?dir=%[2]s&sort=pagename&sortorder=desc) | last modified [↑](%[1]s/browse?dir=%[2]s&sort=modtime) [↓](%[1]s/browse?dir=%[2]s&sort=modtime&sortorder=desc) |\n", br.urlPrefix, br.dir)
+	fmt.Fprintf(&buf, "| page name [↑](%[1]s/browse?dir=%[2]s&sort=pagename) [↓](%[1]s/browse?dir=%[2]s&sort=pagename&sortorder=desc) | last modified [↑](%[1]s/browse?dir=%[2]s&sort=modtime) [↓](%[1]s/browse?dir=%[2]s&sort=modtime&sortorder=desc) |\n", br.urlPrefix, url.QueryEscape(br.dir))
 	fmt.Fprintf(&buf, "|-----------|---------------|\n")
 	// TODO: link to .. if dir != ""
 	for _, line := range br.browseTable() {
