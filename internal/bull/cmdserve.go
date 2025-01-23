@@ -60,6 +60,10 @@ func (c *Customization) serve(args []string) error {
 		"/",
 		"under which path should bull serve its handlers? useful for serving under a non-root location, e.g. https://michael.stapelberg.ch/garden/")
 
+	watch := fset.String("watch",
+		"",
+		"whether pages should watch for updates and reload automatically. one of 'true', 'false' or 'workaround' (default 'true' or 'workaround' if available). the 'workaround' setting picks a random hostname like watchXYZ.localhost to work around the 6 connection limit applied when accessing bull via localhost (HTTP/1), which only works with systemd-resolved")
+
 	if err := fset.Parse(args); err != nil {
 		return err
 	}
@@ -69,6 +73,17 @@ func (c *Customization) serve(args []string) error {
 	}
 	if !strings.HasSuffix(*root, "/") {
 		*root += "/"
+	}
+
+	if *watch == "" && strings.HasPrefix(*listenAddr, "localhost:") {
+		addrs, err := net.LookupHost("watchbull.localhost")
+		if err != nil {
+			log.Printf("NOTE: Browsers will not allow more than 6 concurrent tabs when listening on localhost (HTTP/1) and using -watch=true (default). If this bothers you, front bull with Caddy, Tailscale or similar to use HTTP/2 (which needs HTTPS), install systemd-resolve for -watch=workaround or disable watching pages with -watch=false.")
+			*watch = "true"
+		} else if len(addrs) > 0 {
+			*watch = "workaround"
+			log.Printf("(enabling -watch=workaround to work around EventSource connection limit)")
+		}
 	}
 
 	content, err := os.OpenRoot(*contentDir)
@@ -120,6 +135,7 @@ func (c *Customization) serve(args []string) error {
 		static:          static,
 		editor:          *editor,
 		root:            *root,
+		watch:           *watch,
 	}
 	if err := bull.init(); err != nil {
 		return err
@@ -178,7 +194,7 @@ func (c *Customization) serve(args []string) error {
 	}
 	http.Handle("GET "+urlBullPrefix+"browse", handleError(bull.browse))
 	http.Handle("GET "+urlBullPrefix+"buildinfo", handleError(bull.buildinfo))
-	http.Handle("GET "+urlBullPrefix+"watch/{page...}", handleError(bull.watch))
+	http.Handle("GET "+urlBullPrefix+"watch/{page...}", handleError(bull.handleWatch))
 	http.Handle("POST "+urlBullPrefix+"save/{page...}", handleError(bull.save))
 	http.Handle("GET "+urlBullPrefix+"search", handleError(bull.search))
 	http.Handle("GET "+urlBullPrefix+"_search", handleError(bull.searchAPI))

@@ -26,6 +26,7 @@ type bullServer struct {
 	idx             *idx
 	editor          string
 	root            string
+	watch           string
 }
 
 func (b *bullServer) URLBullPrefix() string {

@@ -33,12 +33,21 @@
     </div>
   </main>
 
+{{ if (or (eq .Watch "true") (eq .Watch "workaround")) }}
   <script type="text/javascript">
     var u = new URL(document.URL);
     u.pathname = '{{ .URLBullPrefix }}watch/' + u.pathname.substr('{{ .URLPrefix }}'.length);
     var params = new URLSearchParams();
     params.set('hash', '{{ .ContentHash }}');
     u.search = params.toString();
+    {{ if (eq .Watch "workaround") }}
+    // systemd-resolved synthesizes DNS resource records for any hostname ending
+    // in .localhost, which allows us to circumvent the 6 connections per origin
+    // limit that browsers like Chrome and Firefox enforce.
+    if (u.hostname == 'localhost') {
+	u.hostname = 'watch' + Math.floor(Math.random() * 100) + '.localhost'
+    }
+    {{ end }}
     var updates = new EventSource(u.toString());
     window.onbeforeunload = function() { updates.close(); };
     updates.onmessage = function(e) {
@@ -47,6 +56,7 @@
 	location.reload();
     }
   </script>
+{{ end }}
 
   <script src="{{ .URLBullPrefix }}js/nav.js?cachebust={{ call .StaticHash "js/nav.js" }}" async></script>
 

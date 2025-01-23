@@ -228,6 +228,7 @@ func (b *bullServer) renderMarkdown(w http.ResponseWriter, r *http.Request, pg *
 		Content       template.HTML
 		ContentHash   string
 		StaticHash    func(string) string
+		Watch         string
 	}{
 		URLPrefix:     b.root,
 		URLBullPrefix: b.URLBullPrefix(),
@@ -238,5 +239,6 @@ func (b *bullServer) renderMarkdown(w http.ResponseWriter, r *http.Request, pg *
 		Content:       template.HTML(html),
 		ContentHash:   pg.ContentHash(),
 		StaticHash:    b.staticHash,
+		Watch:         b.watch,
 	})
 }

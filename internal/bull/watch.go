@@ -65,7 +65,7 @@ func maybeNotify(ctx context.Context, notify chan<- struct{}, fileName string) {
 	}
 }
 
-func (b *bullServer) watch(w http.ResponseWriter, r *http.Request) error {
+func (b *bullServer) handleWatch(w http.ResponseWriter, r *http.Request) error {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		return fmt.Errorf("BUG: ResponseWriter does not implement http.Flusher")
@@ -79,6 +79,7 @@ func (b *bullServer) watch(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	initEventStream(w)
 
 	// Each watch request contains the page ContentHash() as a URL parameter,
