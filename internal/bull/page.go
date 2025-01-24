@@ -59,18 +59,13 @@ func (p *page) URLPath() string {
 
 var homeDir = os.Getenv("HOME")
 
-func (p *page) Abs(contentDir string) string {
-	// We join the page filename with contentDir even for generated pages so
-	// that the title of a tab is sufficient to identify the bull content
-	// directory. In other words, /home/michael/keep/_bull/mostrecent is a
-	// more useful title compared to _bull/mostrecent.
-	abs := filepath.Join(contentDir, p.FileName)
+func briefHome(absPath string) string {
 	// Replace $HOME with ~ for brevity: ~/keep/_bull/mostrecent
 	prefix := homeDir + string(filepath.Separator)
-	if strings.HasPrefix(abs, prefix) {
-		return "~/" + strings.TrimPrefix(abs, prefix)
+	if strings.HasPrefix(absPath, prefix) {
+		return "~/" + strings.TrimPrefix(absPath, prefix)
 	}
-	return abs
+	return absPath
 }
 
 func isMarkdown(file string) bool {

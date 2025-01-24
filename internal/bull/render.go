@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -216,6 +217,16 @@ func (b *bullServer) staticHash(path string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
+func insideOutTitle(fn, contentDir string) string {
+	contentDir = briefHome(contentDir)
+	components := strings.Split(fn, string(os.PathSeparator))
+	slices.Reverse(components)
+	if len(components) > 0 {
+		components[0] = file2page(components[0])
+	}
+	return strings.Join(components, " ← ") + " ← " + contentDir
+}
+
 func (b *bullServer) renderMarkdown(w http.ResponseWriter, r *http.Request, pg *page, md []byte) error {
 	html := b.render(string(md))
 	return b.executeTemplate(w, "page.html.tmpl", struct {
@@ -234,7 +245,7 @@ func (b *bullServer) renderMarkdown(w http.ResponseWriter, r *http.Request, pg *
 		URLBullPrefix: b.URLBullPrefix(),
 		RequestPath:   r.URL.EscapedPath(),
 		ReadOnly:      b.editor == "",
-		Title:         pg.Abs(b.contentDir),
+		Title:         insideOutTitle(pg.FileName, b.contentDir),
 		Page:          pg,
 		Content:       template.HTML(html),
 		ContentHash:   pg.ContentHash(),

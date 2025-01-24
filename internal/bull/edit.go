@@ -47,7 +47,7 @@ func (b *bullServer) edit(w http.ResponseWriter, r *http.Request) error {
 		URLPrefix:     b.root,
 		URLBullPrefix: b.URLBullPrefix(),
 		RequestPath:   r.URL.EscapedPath(),
-		Title:         pg.Abs(b.contentDir),
+		Title:         "edit: " + insideOutTitle(pg.FileName, b.contentDir),
 		Page:          pg,
 		// For editing, we need to use the page contents as stored on disk,
 		// without any customization post-processing.

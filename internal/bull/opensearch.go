@@ -14,9 +14,6 @@ import (
 func (b *bullServer) opensearch(w http.ResponseWriter, r *http.Request) error {
 	cache(w)
 	w.Header().Set("Content-Type", "application/opensearchdescription+xml")
-	absoluteContentDir := (&page{
-		FileName: "index",
-	}).Abs(b.contentDir)
 	// TODO: -trusted_proxies flag
 	trustedProxy := strings.HasPrefix(r.RemoteAddr, "[::1]:") ||
 		strings.HasPrefix(r.RemoteAddr, "127.0.0.1:")
@@ -40,7 +37,7 @@ func (b *bullServer) opensearch(w http.ResponseWriter, r *http.Request) error {
 		URLBullPrefix:      b.URLBullPrefix(),
 		Host:               host,
 		Proto:              proto,
-		AbsoluteContentDir: absoluteContentDir,
+		AbsoluteContentDir: briefHome(b.contentDir),
 	})
 
 }
