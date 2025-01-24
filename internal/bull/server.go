@@ -11,6 +11,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	texttemplate "text/template"
 
 	"github.com/gokrazy/bull"
 	"github.com/gokrazy/bull/internal/assets"
@@ -65,8 +66,39 @@ func (b *bullServer) templates() (*template.Template, error) {
 	return staticOnce()
 }
 
+func textTmplFromFS(fs fs.FS) (*texttemplate.Template, error) {
+	return texttemplate.New("").ParseFS(fs, "*.xml.tmpl")
+}
+
+var textStaticOnce = sync.OnceValues(func() (*texttemplate.Template, error) {
+	return textTmplFromFS(assets.FS)
+})
+
+func (b *bullServer) textTemplates() (*texttemplate.Template, error) {
+	if b.static != nil {
+		return textTmplFromFS(b.static.FS())
+	}
+	return textStaticOnce()
+}
+
 func (b *bullServer) executeTemplate(w http.ResponseWriter, basename string, tmpldata any) error {
 	tmpls, err := b.templates()
+	if err != nil {
+		return err
+	}
+
+	var buf bytes.Buffer
+	if err := tmpls.ExecuteTemplate(&buf, basename, tmpldata); err != nil {
+		return err
+	}
+	if _, err := io.Copy(w, &buf); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (b *bullServer) executeTextTemplate(w http.ResponseWriter, basename string, tmpldata any) error {
+	tmpls, err := b.textTemplates()
 	if err != nil {
 		return err
 	}

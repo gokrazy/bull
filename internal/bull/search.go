@@ -64,19 +64,8 @@ type match struct {
 	nameMatch     bool
 }
 
-func (b *bullServer) searchAPI(w http.ResponseWriter, r *http.Request) error {
-	flusher, ok := w.(http.Flusher)
-	if !ok {
-		return fmt.Errorf("BUG: ResponseWriter does not implement http.Flusher")
-	}
-
-	query := r.FormValue("q")
-	start := time.Now()
+func (b *bullServer) internalsearch(ctx context.Context, query string, progress chan<- progressUpdate) ([]match, error) {
 	log.Printf("searching for query %q", query)
-
-	ctx := r.Context()
-
-	initEventStream(w)
 
 	i := newIndexer(b.content)
 
@@ -89,32 +78,25 @@ func (b *bullServer) searchAPI(w http.ResponseWriter, r *http.Request) error {
 
 		filesRead atomic.Uint64
 	)
-	progressg.Add(1)
 	progressCtx, progressCanc := context.WithCancel(ctx)
 	defer progressCanc()
-	go func() {
-		defer progressg.Done()
-		for {
-			select {
-			case <-progressCtx.Done():
-				return
-			case <-time.After(1 * time.Second):
-				b, err := json.Marshal(progressUpdate{
-					Type:    "progress",
-					Message: fmt.Sprintf("searched through %d files", filesRead.Load()),
-				})
-				if err != nil {
-					log.Print(err)
+	if progress != nil {
+		progressg.Add(1)
+		go func() {
+			defer progressg.Done()
+			for {
+				select {
+				case <-progressCtx.Done():
 					return
+				case <-time.After(1 * time.Second):
+					progress <- progressUpdate{
+						Type:    "progress",
+						Message: fmt.Sprintf("searched through %d files", filesRead.Load()),
+					}
 				}
-				if err := ctx.Err(); err != nil {
-					return
-				}
-				w.Write(append(append([]byte("data: "), b...), '\n', '\n'))
-				flusher.Flush()
 			}
-		}
-	}()
+		}()
+	}
 	for range runtime.NumCPU() {
 		readg.Go(func() error {
 			for pg := range i.readq {
@@ -149,10 +131,10 @@ func (b *bullServer) searchAPI(w http.ResponseWriter, r *http.Request) error {
 		})
 	}
 	if err := i.walk(); err != nil {
-		return err
+		return nil, err
 	}
 	if err := readg.Wait(); err != nil {
-		return err
+		return nil, err
 	}
 	// Synchronize with the progress update goroutine to ensure it no longer
 	// tries to use the ResponseWriter by the time this handler returns.
@@ -179,6 +161,48 @@ func (b *bullServer) searchAPI(w http.ResponseWriter, r *http.Request) error {
 		return false
 	})
 
+	return results, nil
+}
+
+func (b *bullServer) searchAPI(w http.ResponseWriter, r *http.Request) error {
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		return fmt.Errorf("BUG: ResponseWriter does not implement http.Flusher")
+	}
+
+	query := r.FormValue("q")
+	if query == "" {
+		return httpError(http.StatusBadRequest, fmt.Errorf("empty q= parameter not allowed"))
+	}
+	if len(query) < 2 {
+		return httpError(http.StatusBadRequest, fmt.Errorf("minimum query length: 2 characters"))
+	}
+
+	ctx := r.Context()
+	initEventStream(w)
+
+	progress := make(chan progressUpdate)
+	defer close(progress)
+	go func() {
+		for update := range progress {
+			b, err := json.Marshal(update)
+			if err != nil {
+				log.Print(err)
+				return
+			}
+			if err := ctx.Err(); err != nil {
+				return
+			}
+			w.Write(append(append([]byte("data: "), b...), '\n', '\n'))
+			flusher.Flush()
+		}
+	}()
+
+	start := time.Now()
+	results, err := b.internalsearch(ctx, query, progress)
+	if err != nil {
+		return err
+	}
 	log.Printf("search for query %q done in %v, now streaming results", query, time.Since(start))
 
 	// stream search results

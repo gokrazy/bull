@@ -186,16 +186,19 @@ func (c *Customization) serve(args []string) error {
 		if static != nil {
 			assetsFS = static.FS()
 		}
-		http.Handle(urlBullPrefix+"js/", http.StripPrefix(urlBullPrefix,
+		handleStaticFile := http.StripPrefix(urlBullPrefix,
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				cache(w)
 				http.FileServerFS(assetsFS).ServeHTTP(w, r)
-			})))
+			}))
+		http.Handle(urlBullPrefix+"js/", handleStaticFile)
+		http.Handle(urlBullPrefix+"opensearch.xml", http.StripPrefix(urlBullPrefix, handleError(bull.opensearch)))
 	}
 	http.Handle("GET "+urlBullPrefix+"browse", handleError(bull.browse))
 	http.Handle("GET "+urlBullPrefix+"buildinfo", handleError(bull.buildinfo))
 	http.Handle("GET "+urlBullPrefix+"watch/{page...}", handleError(bull.handleWatch))
 	http.Handle("POST "+urlBullPrefix+"save/{page...}", handleError(bull.save))
+	http.Handle("GET "+urlBullPrefix+"suggest", handleError(bull.suggest))
 	http.Handle("GET "+urlBullPrefix+"search", handleError(bull.search))
 	http.Handle("GET "+urlBullPrefix+"_search", handleError(bull.searchAPI))
 

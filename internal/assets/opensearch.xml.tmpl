@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+  <ShortName>bull</ShortName>
+  <Description>bull: {{ .AbsoluteContentDir }}</Description>
+  <Url type="text/html" template="{{ .Proto }}://{{ .Host }}{{ .URLBullPrefix }}search?q={searchTerms}"/>
+  <Url type="application/x-suggestions+json" template="{{ .Proto }}://{{ .Host }}{{ .URLBullPrefix }}suggest?q={searchTerms}"/>
+  <Query role="example" searchTerms="index"/>
+</OpenSearchDescription>
