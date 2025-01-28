@@ -47,7 +47,7 @@ let bullSetup = [
 	...historyKeymap,
 	...lintKeymap,
 	...searchKeymap,
-    indentWithTab,
+	indentWithTab,
     ]),
 ]
 
