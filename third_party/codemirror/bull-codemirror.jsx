@@ -12,7 +12,7 @@ import {keymap, highlightSpecialChars, drawSelection, highlightActiveLine, dropC
 import {Extension, EditorState} from "@codemirror/state"
 import {defaultHighlightStyle, syntaxHighlighting, indentOnInput, bracketMatching,
         foldGutter, foldKeymap} from "@codemirror/language"
-import {defaultKeymap, history, historyKeymap} from "@codemirror/commands"
+import {defaultKeymap, history, historyKeymap, indentWithTab} from "@codemirror/commands"
 import {searchKeymap, highlightSelectionMatches} from "@codemirror/search"
 import {lintKeymap} from "@codemirror/lint"
 
@@ -43,10 +43,11 @@ let bullSetup = [
     highlightSelectionMatches(),
     keymap.of([
 	...defaultKeymap,
-	...searchKeymap,
-	...historyKeymap,
 	...foldKeymap,
-	...lintKeymap
+	...historyKeymap,
+	...lintKeymap,
+	...searchKeymap,
+	...indentWithTab,
     ]),
 ]
 
