@@ -20,5 +20,8 @@ jobs:
       run: |
         [ "$(gofmt -l $(find . -name '*.go') 2>&1)" = "" ]
 
+    - name: staticcheck
+      run: go tool staticcheck ./...
+
     - name: run tests
       run: go test -v ./...

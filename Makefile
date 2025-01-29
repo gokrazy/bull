@@ -4,6 +4,7 @@ all: install
 
 test:
 	CGO_ENABLED=0 go test -fullpath ./...
+	CGO_ENABLED=0 go tool staticcheck ./...
 
 install: test
 	CGO_ENABLED=0 go install ./cmd/bull
