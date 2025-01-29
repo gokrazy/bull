@@ -9,7 +9,7 @@ import {markdown} from "@codemirror/lang-markdown"
 import {keymap, highlightSpecialChars, drawSelection, highlightActiveLine, dropCursor,
         rectangularSelection, crosshairCursor,
         lineNumbers, highlightActiveLineGutter} from "@codemirror/view"
-import {Extension, EditorState} from "@codemirror/state"
+import {EditorState} from "@codemirror/state"
 import {defaultHighlightStyle, syntaxHighlighting, indentOnInput, bracketMatching,
         foldGutter, foldKeymap} from "@codemirror/language"
 import {defaultKeymap, history, historyKeymap, indentWithTab} from "@codemirror/commands"
@@ -53,6 +53,8 @@ let bullSetup = [
     ]),
 ]
 
+declare var BullMarkdown: string
+
 let editor = new EditorView({
     doc: BullMarkdown,
     extensions: [
@@ -66,6 +68,7 @@ let editor = new EditorView({
 editor.focus();
 
 // Inject the editor content into the <form> before submit
-document.getElementById('bull-save').onclick = function(event) {
-    document.getElementById('bull-markdown').value = editor.state.doc.toString();
+document.getElementById('bull-save').onclick = function(_unused) {
+    var bullMarkdown = <HTMLTextAreaElement>document.getElementById('bull-markdown');
+    bullMarkdown.value = editor.state.doc.toString();
 }
