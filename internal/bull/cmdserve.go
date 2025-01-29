@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/gokrazy/bull/internal/assets"
-	thirdparty "github.com/gokrazy/bull/third_party"
+	"github.com/gokrazy/bull/internal/codemirror"
 	"golang.org/x/image/font/gofont/gobold"
 	"golang.org/x/image/font/gofont/gomono"
 	"golang.org/x/image/font/gofont/goregular"
@@ -29,7 +29,7 @@ Example:
 `
 
 func defaultEditor() string {
-	if len(thirdparty.BullCodemirror) > 0 {
+	if len(codemirror.BullCodemirror) > 0 {
 		return "codemirror"
 	}
 	return "textarea"
@@ -180,7 +180,7 @@ func (c *Customization) serve(args []string) error {
 		http.HandleFunc(urlBullPrefix+"js/"+basename,
 			func(w http.ResponseWriter, r *http.Request) {
 				cache(w)
-				http.ServeContent(w, r, basename, zeroModTime, bytes.NewReader(thirdparty.BullCodemirror))
+				http.ServeContent(w, r, basename, zeroModTime, bytes.NewReader(codemirror.BullCodemirror))
 			})
 		var assetsFS fs.FS = assets.FS
 		if static != nil {

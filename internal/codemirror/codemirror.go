@@ -1,8 +1,8 @@
 //go:build !nocodemirror
 
-package thirdparty
+package codemirror
 
 import _ "embed"
 
-//go:embed codemirror/bull-codemirror.bundle.js
+//go:embed bull-codemirror.bundle.js
 var BullCodemirror []byte
