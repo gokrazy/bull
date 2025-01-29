@@ -188,7 +188,7 @@ func (b *bullServer) renderWithBacklinks(w http.ResponseWriter, r *http.Request,
 	return b.renderMarkdown(w, r, pg, wb)
 }
 
-func (b *bullServer) renderBullMarkdown(w http.ResponseWriter, r *http.Request, basename string, buf bytes.Buffer) error {
+func (b *bullServer) renderBullMarkdown(w http.ResponseWriter, r *http.Request, basename string, buf *bytes.Buffer) error {
 	pageName := bullPrefix + basename
 	pg := &page{
 		Exists:   true,
