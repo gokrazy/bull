@@ -47,7 +47,9 @@ let bullSetup = [
 	...historyKeymap,
 	...lintKeymap,
 	...searchKeymap,
-	...indentWithTab,
+	// TODO: document why indentWithTab breaks with ...
+	// prepended, but others need it?!
+	indentWithTab,
     ]),
 ]
 
