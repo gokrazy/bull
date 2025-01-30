@@ -192,6 +192,7 @@ func (c *Customization) serve(args []string) error {
 				http.FileServerFS(assetsFS).ServeHTTP(w, r)
 			}))
 		http.Handle(urlBullPrefix+"js/", handleStaticFile)
+		http.Handle(urlBullPrefix+"css/", handleStaticFile)
 		http.Handle(urlBullPrefix+"opensearch.xml", http.StripPrefix(urlBullPrefix, handleError(bull.opensearch)))
 	}
 	http.Handle("GET "+urlBullPrefix+"browse", handleError(bull.browse))
