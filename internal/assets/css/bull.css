@@ -217,11 +217,21 @@ main img {
     margin-right: 1.85rem;
 }
 
+form.bull_rename input[type="text"] {
+    width: 75%;
+    padding: .25rem;
+    margin: .25rem .5rem;
+}
+
+form.bull_rename input[type="submit"] {
+    padding: .25rem;
+    margin: .5rem 0;
+}
+
 main>div:first-child {
     max-width: 45rem;
     padding: 1rem;
 }
-
 
 main hr {
     margin: 2rem 20rem;

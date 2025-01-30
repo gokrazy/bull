@@ -202,6 +202,8 @@ func (c *Customization) serve(args []string) error {
 	http.Handle("GET "+urlBullPrefix+"suggest", handleError(bull.suggest))
 	http.Handle("GET "+urlBullPrefix+"search", handleError(bull.search))
 	http.Handle("GET "+urlBullPrefix+"_search", handleError(bull.searchAPI))
+	http.Handle("GET "+urlBullPrefix+"rename/{page...}", handleError(bull.rename))
+	http.Handle("POST "+urlBullPrefix+"_rename/{page...}", handleError(bull.renameAPI))
 
 	ln, err := net.Listen("tcp", *listenAddr)
 	if err != nil {

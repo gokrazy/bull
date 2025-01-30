@@ -48,6 +48,8 @@ func (b *bullServer) converter() goldmark.Markdown {
 		// Turn newlines into <br>.
 		rendererOpts = append(rendererOpts, html.WithHardWraps())
 	}
+	// Allow inline HTML e.g. for the page rename form.
+	rendererOpts = append(rendererOpts, html.WithUnsafe())
 	return goldmark.New(
 		goldmark.WithExtensions(
 			// extension.GFM is defined as
