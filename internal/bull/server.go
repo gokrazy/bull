@@ -116,10 +116,10 @@ func (b *bullServer) executeTextTemplate(w http.ResponseWriter, basename string,
 func urlForListener(ln net.Listener) string {
 	host := *ln.Addr().(*net.TCPAddr)
 	switch {
-	case bytes.Equal(host.IP, net.IPv4zero):
+	case host.IP.Equal(net.IPv4zero):
 		// TODO: why is there no net.IPv4loopback?
 		host.IP = net.ParseIP("127.0.0.1")
-	case bytes.Equal(host.IP, net.IPv6zero):
+	case host.IP.Equal(net.IPv6zero):
 		host.IP = net.IPv6loopback
 	}
 	return (&url.URL{

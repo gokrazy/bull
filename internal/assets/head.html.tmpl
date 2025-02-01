@@ -1,287 +1,51 @@
 <head>
-<title>{{ .Title }}</title>
-<style>
-  @font-face {
-      font-family: 'Go';
-      src: url('{{ .URLBullPrefix }}gofont/goregular.ttf') format('truetype');
-      font-weight: normal;
-      font-style: normal;
-      font-display: block;
-  }
+  <title>{{ .Title }}</title>
+  <link rel="preload" href="{{ .URLBullPrefix }}gofont/goregular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="{{ .URLBullPrefix }}gofont/gobold.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="{{ .URLBullPrefix }}gofont/gomono.ttf" as="font" type="font/ttf" crossorigin>
+  <style>
+    /* Only @font-face and font-family directives are embedded directly into
+     * the page (for fastest font loading), the rest is in css/bull.css. */
 
-  @font-face {
-      font-family: 'Go';
-      src: url('{{ .URLBullPrefix }}gofont/gobold.ttf') format('truetype');
-      font-weight: bold;
-      font-style: normal;
-      font-display: block;
-  }
+    @font-face {
+	font-family: 'Go';
+	src: url('{{ .URLBullPrefix }}gofont/goregular.ttf') format('truetype');
+	font-weight: normal;
+	font-style: normal;
+	font-display: block;
+    }
 
-  @font-face {
-      font-family: 'Go Mono';
-      src: url('{{ .URLBullPrefix }}gofont/gomono.ttf') format('truetype');
-      font-weight: normal;
-      font-style: normal;
-      font-display: block;
-  }
+    @font-face {
+	font-family: 'Go';
+	src: url('{{ .URLBullPrefix }}gofont/gobold.ttf') format('truetype');
+	font-weight: bold;
+	font-style: normal;
+	font-display: block;
+    }
 
-  /* TODO: scroll-padding-top? */
+    @font-face {
+	font-family: 'Go Mono';
+	src: url('{{ .URLBullPrefix }}gofont/gomono.ttf') format('truetype');
+	font-weight: normal;
+	font-style: normal;
+	font-display: block;
+    }
 
-  * {
-      margin: 0;
-      padding: 0;
-  }
+    body, td, th {
+	font-family: 'Go';
+	font-size: 16px;
+    }
 
-  /* fonts */
-  
-  body, td, th {
-      font-family: 'Go';
-      font-size: 16px;
-      line-height: 1.3rem;
-      color: #000;
-  }
+    h1, h2, h3, h4, h5, h6 {
+	font-family: 'Go';
+	font-weight: bold;
+	font-variant-ligatures: none;
+    }
 
-  h1, h2, h3, h4, h5, h6 {
-      font-family: 'Go';
-      font-weight: bold;
-      font-variant-ligatures: none;
-      color: #000;
-      line-height: 2.3rem;
-  }
-
-  h1 { font-size: 1.8rem; }
-  h2 { font-size: 1.6rem; }
-  h3 { font-size: 1.4rem; }
-  h4 { font-size: 1.2rem; }
-  h5 { font-size: 1.0rem; }
-  h6 { font-size: 0.8rem; }
-
-  body {
-      overflow-y: scroll;
-  }
-
-  div.bull_edit {
-      height: 100%;
-  }
-
-  .bull_edit main {
-      /* full browser viewport height except for the header */
-      height: calc(100vh - 13rem);
-  }
-
-  #cm-goes-here {
-      resize: vertical;
-      overflow: auto;
-      height: 100% !important;
-  }
-
-  .cm-editor {
-      height: 100%;
-  }
-
-  pre, code, .cm-content {
-      font-family: 'Go Mono';
-  }
-  main > pre, .cm-content {
-      font-size: 16px;
-  }
-
-  pre, code {
-      background-color: #eee;
-      padding: .1rem;
-  }
-
-  pre {
-      overflow-x: auto;
-      font-size: 0.9rem;
-      padding: .6rem 1rem;
-      margin: .75rem 0;
-  }
-
-  /* TODO: try using less opacity in nested lists */
-
-  /* margins and typography */
-
-  main h1, main h2, main h3, main h4, main h5, main h6 {
-      margin-top: 2rem;
-      margin-bottom: .75rem;
-  }
-
-  .bull_title {
-      margin-top: 1rem;
-      margin-bottom: 0;
-  }
-
-  #bull_desktopnav {
-      display: none;
-  }
-
-  main > p {
-      margin-top: .75rem;
-      margin-bottom: .75rem;
-  }
-
-  .bull_page p {
-      margin-top: .5rem;
-      margin-bottom: .5rem;
-  }
-
-  main blockquote {
-      padding-left: 1rem;
-      padding-right: 2rem;
-      border-left: 5px solid grey;
-  }
-
-  main ul, main ol {
-      padding-left: 2rem;
-      margin-top: .5rem;
-      margin-bottom: .5rem;
-  }
-
-  main ul {
-      list-style-type: disc;
-  }
-
-  main li {
-      margin-bottom: .3rem;
-  }
-
-  #bull_searchform input[type="text"] {
-      width: 40rem;
-      margin: 1rem 0;
-      padding: .3rem;
-  }
-
-  main input[type="checkbox"] {
-      margin-left: .3rem;
-      margin-right: .4rem;
-      /* TODO: vertikal einmitten */
-  }
-
-  main input[type="submit"] {
-      padding: .25rem;
-      margin-bottom: .25rem;
-  }
-
-  main table {
-      min-width: 100%;
-      margin: 1rem .5rem;
-      border-spacing: 0;
-  }
-
-  main table tr:nth-child(even) {
-      background-color: #eee;
-  }
-
-  .bull_gen_browse th a,
-  .bull_gen_browse th a:visited {
-      color: #fff;
-      text-decoration: none;
-      padding: .25rem .5rem;
-      background-color: #555;
-  }
-
-  .bull_gen_browse th a:nth-child(1),
-  .bull_gen_browse th a:visited:nth-child(1) {
-      margin-left: 1rem;
-  }
-
-  main th {
-      background-color: #000;
-      color: #fff;
-      text-align: left;
-  }
-
-  main th, main td {
-      padding: .4rem;
-      white-space: nowrap;
-  }
-
-  main th {
-      padding: .5rem .4rem;
-  }
-
-  main img {
-      max-width: 100%;
-  }
-
-  /* layout */
-
-  .bull_lastupdate {
-      opacity: .5;
-      font-size: .9rem;
-      margin-bottom: 1rem;
-  }
-  
-  #bull_navbar, #bull_footer, main {
-      max-width: 45rem;
-      margin: auto;
-  }
-  
-  #bull_navbar {
-      display: grid;
-      grid-template-columns: calc(2rem + 44px) auto auto;
-      align-items: center;
-      padding: .25rem 0;
-      position: sticky;
-      top: 0;
-      background-color: #fff;
-      z-index: 1;
-  }
-
-  #bull_navbar a:link,
-  #bull_navbar a:visited {
-      text-decoration: none;
-  }
-
-  #bull_navbar a.active {
-      font-weight: bold;
-  }
-
-  #bull_navbar li {
-      display: inline;
-      margin-right: 1.85rem;
-  }
-
-  main>div:first-child {
-      max-width: 45rem;
-      padding: 1rem;
-  }
-
-
-  main hr {
-      margin: 2rem 20rem;
-      border: 0;
-      border-top: 1px solid grey;
-      max-width: 100%;
-  }
-
-  /* 58rem is 16px * 58 = 928 px */
-  @media screen and (min-width: 58rem) {
-      #bull_navbar {
-	  padding-top: .5rem;
-      }
-
-      #bull_navbar, #bull_footer, main {
-	  max-width: calc(45rem + 13rem);
-      }
-
-      main {
-	  display: flex;
-      }
-
-      #bull_desktopnav {
-	  display: block;
-      }
-      #bull_mobilenav {
-	  display: none;
-      }
-
-      main>div:first-child {
-          width: 45rem;
-      }
-
-  }
-</style>
-<link rel="search" type="application/opensearchdescription+xml" href="{{ .URLBullPrefix }}opensearch.xml">
+    pre, code, .cm-content {
+	font-family: 'Go Mono';
+    }
+  </style>
+  <link rel="stylesheet" type="text/css" href="{{ .URLBullPrefix }}css/bull.css?cachebust={{ call .StaticHash "css/bull.css" }}">
+  <link rel="search" type="application/opensearchdescription+xml" href="{{ .URLBullPrefix }}opensearch.xml">
 </head>

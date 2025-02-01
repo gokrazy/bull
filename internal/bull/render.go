@@ -23,7 +23,6 @@ import (
 	"github.com/yuin/goldmark/renderer/html"
 	"github.com/yuin/goldmark/text"
 	"go.abhg.dev/goldmark/wikilink"
-	"mvdan.cc/xurls/v2"
 )
 
 type resolver struct {
@@ -49,14 +48,14 @@ func (b *bullServer) converter() goldmark.Markdown {
 		// Turn newlines into <br>.
 		rendererOpts = append(rendererOpts, html.WithHardWraps())
 	}
+	// Allow inline HTML e.g. for the page rename form.
+	rendererOpts = append(rendererOpts, html.WithUnsafe())
 	return goldmark.New(
 		goldmark.WithExtensions(
 			// extension.GFM is defined as
 			// Linkify, Table, Strikethrough and TaskList
 			// We need to pass custom options to Linkify.
-			extension.NewLinkify(
-				extension.WithLinkifyAllowedProtocols([]string{""}),
-				extension.WithLinkifyURLRegexp(xurls.Relaxed())),
+			extension.Linkify,
 			extension.Table,
 			extension.Strikethrough,
 			extension.TaskList,
@@ -188,7 +187,7 @@ func (b *bullServer) renderWithBacklinks(w http.ResponseWriter, r *http.Request,
 	return b.renderMarkdown(w, r, pg, wb)
 }
 
-func (b *bullServer) renderBullMarkdown(w http.ResponseWriter, r *http.Request, basename string, buf bytes.Buffer) error {
+func (b *bullServer) renderBullMarkdown(w http.ResponseWriter, r *http.Request, basename string, buf *bytes.Buffer) error {
 	pageName := bullPrefix + basename
 	pg := &page{
 		Exists:   true,

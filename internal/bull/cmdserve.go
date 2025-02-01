@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/gokrazy/bull/internal/assets"
-	thirdparty "github.com/gokrazy/bull/third_party"
+	"github.com/gokrazy/bull/internal/codemirror"
 	"golang.org/x/image/font/gofont/gobold"
 	"golang.org/x/image/font/gofont/gomono"
 	"golang.org/x/image/font/gofont/goregular"
@@ -29,7 +29,7 @@ Example:
 `
 
 func defaultEditor() string {
-	if len(thirdparty.BullCodemirror) > 0 {
+	if len(codemirror.BullCodemirror) > 0 {
 		return "codemirror"
 	}
 	return "textarea"
@@ -180,7 +180,7 @@ func (c *Customization) serve(args []string) error {
 		http.HandleFunc(urlBullPrefix+"js/"+basename,
 			func(w http.ResponseWriter, r *http.Request) {
 				cache(w)
-				http.ServeContent(w, r, basename, zeroModTime, bytes.NewReader(thirdparty.BullCodemirror))
+				http.ServeContent(w, r, basename, zeroModTime, bytes.NewReader(codemirror.BullCodemirror))
 			})
 		var assetsFS fs.FS = assets.FS
 		if static != nil {
@@ -192,6 +192,7 @@ func (c *Customization) serve(args []string) error {
 				http.FileServerFS(assetsFS).ServeHTTP(w, r)
 			}))
 		http.Handle(urlBullPrefix+"js/", handleStaticFile)
+		http.Handle(urlBullPrefix+"css/", handleStaticFile)
 		http.Handle(urlBullPrefix+"opensearch.xml", http.StripPrefix(urlBullPrefix, handleError(bull.opensearch)))
 	}
 	http.Handle("GET "+urlBullPrefix+"browse", handleError(bull.browse))
@@ -201,6 +202,8 @@ func (c *Customization) serve(args []string) error {
 	http.Handle("GET "+urlBullPrefix+"suggest", handleError(bull.suggest))
 	http.Handle("GET "+urlBullPrefix+"search", handleError(bull.search))
 	http.Handle("GET "+urlBullPrefix+"_search", handleError(bull.searchAPI))
+	http.Handle("GET "+urlBullPrefix+"rename/{page...}", handleError(bull.rename))
+	http.Handle("POST "+urlBullPrefix+"_rename/{page...}", handleError(bull.renameAPI))
 
 	ln, err := net.Listen("tcp", *listenAddr)
 	if err != nil {

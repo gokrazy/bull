@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	thirdparty "github.com/gokrazy/bull/third_party"
+	"github.com/gokrazy/bull/internal/codemirror"
 )
 
 func (b *bullServer) edit(w http.ResponseWriter, r *http.Request) error {
@@ -54,7 +54,7 @@ func (b *bullServer) edit(w http.ResponseWriter, r *http.Request) error {
 		MarkdownContent: pg.DiskContent,
 		StaticHash:      b.staticHash,
 		StaticHashCodeMirror: func() string {
-			return hashSum(thirdparty.BullCodemirror)
+			return hashSum(codemirror.BullCodemirror)
 		},
 	})
 }

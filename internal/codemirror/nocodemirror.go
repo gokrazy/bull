@@ -1,5 +1,5 @@
 //go:build nocodemirror
 
-package thirdparty
+package codemirror
 
 var BullCodemirror []byte
