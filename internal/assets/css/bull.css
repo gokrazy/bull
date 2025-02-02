@@ -35,6 +35,7 @@ h6 { font-size: 0.8rem; }
 
 body {
     overflow-y: scroll;
+    background-color: #ffffff;
 }
 
 div.bull_edit {
