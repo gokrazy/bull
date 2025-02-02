@@ -40,7 +40,10 @@ bull works with pages, so maybe you would like to:
 func (b *bullServer) renderNotFound(w http.ResponseWriter, r *http.Request) error {
 	pageName := pageFromURL(r)
 	var buf bytes.Buffer
-	fmt.Fprintf(&buf, "# Error: page %q not found\n", pageName)
+	fmt.Fprintf(&buf, `# Error: page %q not found
+
+To create this page <a href="%s/edit/%s">click here</a> or press <kbd>Ctrl/Meta<kbd> + <kbd>E</kbd>.
+	`, pageName, b.URLBullPrefix(), pageName)
 	if pageName == "index" {
 		nf, err := b.indexNotFound()
 		if err != nil {
