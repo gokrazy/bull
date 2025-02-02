@@ -28,6 +28,7 @@ func (b *bullServer) search(w http.ResponseWriter, r *http.Request) error {
 		Page          *page
 		ReadOnly      bool
 		Query         string
+		StaticHash    func(string) string
 	}{
 		URLPrefix:     b.root,
 		URLBullPrefix: b.URLBullPrefix(),
@@ -37,7 +38,8 @@ func (b *bullServer) search(w http.ResponseWriter, r *http.Request) error {
 			PageName: pageName,
 			FileName: page2desired(pageName),
 		},
-		Query: r.FormValue("q"),
+		Query:      r.FormValue("q"),
+		StaticHash: b.staticHash,
 	})
 }
 
