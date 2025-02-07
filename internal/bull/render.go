@@ -15,6 +15,7 @@ import (
 
 	"github.com/gokrazy/bull/internal/assets"
 	"github.com/gokrazy/bull/internal/hashtag"
+	"github.com/gokrazy/bull/internal/linkify"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
@@ -55,7 +56,7 @@ func (b *bullServer) converter() goldmark.Markdown {
 			// extension.GFM is defined as
 			// Linkify, Table, Strikethrough and TaskList
 			// We need to pass custom options to Linkify.
-			extension.Linkify,
+			&linkify.Extender{},
 			extension.Table,
 			extension.Strikethrough,
 			extension.TaskList,
@@ -228,6 +229,18 @@ func insideOutTitle(fn, contentDir string) string {
 
 func (b *bullServer) renderMarkdown(w http.ResponseWriter, r *http.Request, pg *page, md []byte) error {
 	html := b.render(string(md))
+	if accept := r.Header.Get("Accept"); accept != "" {
+		// TODO(go1.25): use net/http content negotiation if available:
+		// https://github.com/golang/go/issues/19307
+		// (No big deal, we mostly use Accept headers for testing.)
+		posMarkdown := strings.Index(accept, "text/markdown")
+		posHTML := strings.Index(accept, "text/html")
+		if posMarkdown > -1 &&
+			(posHTML == -1 || posMarkdown < posHTML) {
+			w.Write([]byte(html))
+			return nil
+		}
+	}
 	return b.executeTemplate(w, "page.html.tmpl", struct {
 		URLPrefix     string
 		URLBullPrefix string
