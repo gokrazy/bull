@@ -1,7 +1,10 @@
-// in the bull/third_party/codemirror directory:
+// To re-generate the CodeMirror editor JavaScript bundle with the currently
+// used versions, run regenerate.sh.
 //
-// npm install codemirror
-// npm install codemirror/lang-markdown
+// To update to a new CodeMirror version, run:
+//
+// (cd third_party/codemirror && npm install codemirror)
+// (cd third_party/codemirror && npm install codemirror/lang-markdown)
 
 import {EditorView} from "codemirror"
 import {markdown} from "@codemirror/lang-markdown"

@@ -5,6 +5,7 @@ go 1.24rc2
 require (
 	github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c
 	github.com/fsnotify/fsnotify v1.8.0
+	github.com/google/go-cmp v0.6.0
 	github.com/yuin/goldmark v1.7.8
 	go.abhg.dev/goldmark/wikilink v0.5.0
 	golang.org/x/image v0.23.0
