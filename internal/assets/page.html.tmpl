@@ -49,7 +49,6 @@
     }
     {{ end }}
     var updates = new EventSource(u.toString());
-    window.onbeforeunload = function() { updates.close(); };
     updates.onmessage = function(e) {
 	//const update = JSON.parse(e.data)
 	console.log('page changed:', e.data);

@@ -36,7 +36,6 @@
   <script type="text/javascript">
     var u = new URL(document.URL);
     var updates = new EventSource('{{ .URLBullPrefix }}watch' + u.pathname);
-    window.onbeforeunload = function() { updates.close(); };
     updates.onmessage = function(e) {
 	//const update = JSON.parse(e.data)
 	console.log('page changed:', e.data);
