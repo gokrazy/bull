@@ -16,7 +16,7 @@
 	<!-- TODO: implement -editor=textarea -->
 
 	<form action="{{ .URLBullPrefix }}save/{{ .Page.PageName }}" method="post">
-	  <input type="hidden" id="bull-markdown" name="markdown">
+	  <textarea style="display: none" id="bull-markdown" name="markdown"></textarea>
 	  <input type="submit" id="bull-save" value="save page (ctrl/meta+s)">
 	</form>
 
