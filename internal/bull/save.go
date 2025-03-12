@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func (b *bullServer) save(w http.ResponseWriter, r *http.Request) error {
@@ -16,6 +17,11 @@ func (b *bullServer) save(w http.ResponseWriter, r *http.Request) error {
 	if md == "" {
 		return fmt.Errorf("markdown= parameter empty. to save an empty page, put at least a space")
 	}
+
+	// The HTML spec mandates that browser normalize line endings to \r\n:
+	// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#multipart-form-data
+	// We want to stick to UNIX line endings (\n) though:
+	md = strings.ReplaceAll(md, "\r\n", "\n")
 
 	pageName := pageFromURL(r)
 	possibilities := page2files(pageName)

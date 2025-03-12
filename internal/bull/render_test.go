@@ -186,9 +186,9 @@ func TestLinkify(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// TODO: refactor the registration between bull.go and here
+	// TODO: refactor the registration between cmdserve.go and here
 	mux := http.NewServeMux()
-	mux.Handle("/{page...}", handleError(bull.handleRender))
+	mux.Handle("GET /{page...}", handleError(bull.handleRender))
 
 	testsrv := httptest.NewServer(mux)
 	cl := testsrv.Client()
