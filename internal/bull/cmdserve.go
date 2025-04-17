@@ -78,7 +78,7 @@ func (c *Customization) serve(args []string) error {
 	if *watch == "" && strings.HasPrefix(*listenAddr, "localhost:") {
 		addrs, err := net.LookupHost("watchbull.localhost")
 		if err != nil {
-			log.Printf("NOTE: Browsers will not allow more than 6 concurrent tabs when listening on localhost (HTTP/1) and using -watch=true (default). If this bothers you, front bull with Caddy, Tailscale or similar to use HTTP/2 (which needs HTTPS), install systemd-resolve for -watch=workaround or disable watching pages with -watch=false.")
+			log.Printf("NOTE: Browsers will not allow more than 6 concurrently visible tabs when listening on localhost (HTTP/1) and using -watch=true (default). If this bothers you, front bull with Caddy, Tailscale or similar to use HTTP/2 (which needs HTTPS), install systemd-resolve for -watch=workaround or disable watching pages with -watch=false.")
 			*watch = "true"
 		} else if len(addrs) > 0 {
 			*watch = "workaround"

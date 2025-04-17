@@ -48,12 +48,42 @@
 	u.hostname = 'watch' + Math.floor(Math.random() * 100) + '.localhost'
     }
     {{ end }}
-    var updates = new EventSource(u.toString());
-    updates.onmessage = function(e) {
-	//const update = JSON.parse(e.data)
-	console.log('page changed:', e.data);
-	location.reload();
+    var updates = undefined;
+    function watch() {
+      if (updates !== undefined) {
+        console.log('stream still alive');
+        return;
+      }
+      updates = new EventSource(u.toString());
+      updates.onmessage = function(e) {
+        //const update = JSON.parse(e.data)
+        console.log('page changed:', e.data);
+        location.reload();
+      }
     }
+    function unwatch() {
+      if (updates === undefined) {
+        return;
+      }
+      console.log('closing stream');
+      updates.close();
+      updates = undefined;
+    }
+    // Only watch for changes while the tab is visible.
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        unwatch();
+      } else {
+        watch();
+      }
+    });
+    // NB: I am not sure if the unload handler fixes the problem
+    // because it closes the EventSource connection,
+    // or because the mere presence of an unload handler prevents
+    // pages from entering the bfcache.
+    window.addEventListener("unload", unwatch);
+    window.addEventListener("pagehide", unwatch);
+    window.addEventListener("pageshow", watch);
   </script>
 {{ end }}
 
