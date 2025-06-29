@@ -43,7 +43,7 @@ func (b *bullServer) renderNotFound(w http.ResponseWriter, r *http.Request) erro
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, `# Error: page %q not found
 
-To create this page <a href="%sedit/%s">click here</a> or press <kbd>Ctrl/Meta<kbd> + <kbd>E</kbd>.
+To create this page <a href="%sedit/%s">click here</a> or press <kbd>Ctrl/Meta</kbd> + <kbd>E</kbd>.
 	`, pageName, b.URLBullPrefix(), url.PathEscape(pageName))
 	if pageName == "index" {
 		nf, err := b.indexNotFound()
