@@ -8,7 +8,6 @@ function navModifierHeld(e) {
     return false;
 }
 
-const navedit = document.getElementById('bull_nav_edit');
 const navmostrecent = document.getElementById('bull_nav_mostrecent');
 const navsearch = document.getElementById('bull_nav_search');
 const navindex = document.getElementById('bull_nav_index');
@@ -20,6 +19,7 @@ document.addEventListener('keydown', function(e) {
     if (e.key == 'e') {
 	// C-e (_e_dit)
 	event.preventDefault();
+	const navedit = document.getElementById('bull_nav_edit');
 	navedit.click();
     }
     if (e.key == 'm') {

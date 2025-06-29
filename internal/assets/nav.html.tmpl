@@ -12,13 +12,13 @@
 	       {{ end }}
 	       >View page</a></li>
 	{{ if (and (not .Page.IsGenerated) (not .ReadOnly)) }}
-	<li><a id="bull_nav_edit" href="{{ .URLBullPrefix }}edit/{{ .Page.URLPath }}"
+	<li id="bull_nav_edit_li"><a id="bull_nav_edit" href="{{ .URLBullPrefix }}edit/{{ .Page.URLPath }}"
 	       {{ if (hasPrefix .RequestPath "{{ .URLBullPrefix }}edit/") }}
 	       class="active"
 	       {{ end }}
 	       >{{ if (not .Page.Exists) }}Create page{{ else }}<span style="text-decoration: underline">E</span>dit page{{ end }}</a></li>
 	{{ else }}
-	<li>Edit page</li>
+	<li id="bull_nav_edit_li">Edit page</li>
 	{{ end }}
 	<li><a id="bull_nav_mostrecent" href="{{ .URLBullPrefix }}browse?sort=modtime&sortorder=desc"
 	       {{ if (eq .Page.PageName "_bull/browse") }}

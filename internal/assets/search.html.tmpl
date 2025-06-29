@@ -26,12 +26,25 @@
 
   <script type="text/javascript">
 
+    const navedit = document.getElementById('bull_nav_edit_li');
+
     const escapeHtml = (unsafe) => {
 	return unsafe.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
     }
 
-    function renderResults(results) {
-	var html = '<p>Search results: ' + results.length + '</p><ul>';
+    function renderResults(q, results) {
+	var html = '<p>Search results: ' + results.length + '</p>';
+	// TODO: check if the page exists once we introduce fuzzy results
+	if (results.length == 0) {
+	    var u = new URL(window.location);
+	    u.pathname = '{{ .URLBullPrefix }}edit/' + q;
+	    u.hash = '';
+
+	    html += '<p>→ <a href="' + u.toString() + '">Create page <code>' + q + '</code></a> (<kbd>Ctrl/Meta</kbd> + <kbd>E</kbd>)</p>';
+
+	    navedit.innerHTML = '<a id="bull_nav_edit" href="{{ .URLBullPrefix }}edit/' + q + '">Create page</a>';
+	}
+	html += '<ul>';
 	for (result of results) {
 	    var u = new URL(window.location);
 	    u.pathname = '{{ .URLPrefix }}' + result.page_name;
@@ -54,6 +67,7 @@
 	if (lastq === '') {
 	    console.log('should abort current search, if any');
 	    searchresults.innerHTML = '<i>Enter a search query above.</i>';
+	    navedit.innerHTML = 'Edit page';
 	    var u = new URL(window.location);
 	    u.hash = '#';
 	    window.location = u.toString();
@@ -81,7 +95,7 @@
 		results.push(chunk);
 	    } else if (chunk.type === 'done') {
 		resultstream.close();
-		searchresults.innerHTML = renderResults(results);
+		searchresults.innerHTML = renderResults(lastq, results);
 	    }
 	}
 	resultstream.onerror = function(err) {
