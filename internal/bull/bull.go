@@ -10,6 +10,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/gokrazy/bull"
+	"github.com/yuin/goldmark"
 )
 
 const bullPrefix = "_bull/"
@@ -69,7 +70,9 @@ type Customization struct {
 	// used to modify or replace the content.
 	AfterPageRead func([]byte) []byte
 
-	// TODO: markdown goldmark option hook?
+	// GoldmarkExtensions allows you to install custom extensions for the
+	// goldmark markdown renderer.
+	GoldmarkExtensions []goldmark.Extender
 }
 
 func (c *Customization) Runbull() error {

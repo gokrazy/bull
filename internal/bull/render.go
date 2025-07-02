@@ -51,25 +51,29 @@ func (b *bullServer) converter() goldmark.Markdown {
 	}
 	// Allow inline HTML e.g. for the page rename form.
 	rendererOpts = append(rendererOpts, html.WithUnsafe())
+	extensions := []goldmark.Extender{
+		// extension.GFM is defined as
+		// Linkify, Table, Strikethrough and TaskList
+		// We need to pass custom options to Linkify.
+		&linkify.Extender{},
+		extension.Table,
+		extension.Strikethrough,
+		extension.TaskList,
+		&wikilink.Extender{
+			Resolver: &resolver{
+				root:        b.root,
+				contentRoot: b.content,
+			},
+		},
+		&hashtag.Extender{
+			URLBullPrefix: b.URLBullPrefix(),
+		},
+	}
+	if b.customization != nil {
+		extensions = append(extensions, b.customization.GoldmarkExtensions...)
+	}
 	return goldmark.New(
-		goldmark.WithExtensions(
-			// extension.GFM is defined as
-			// Linkify, Table, Strikethrough and TaskList
-			// We need to pass custom options to Linkify.
-			&linkify.Extender{},
-			extension.Table,
-			extension.Strikethrough,
-			extension.TaskList,
-			&wikilink.Extender{
-				Resolver: &resolver{
-					root:        b.root,
-					contentRoot: b.content,
-				},
-			},
-			&hashtag.Extender{
-				URLBullPrefix: b.URLBullPrefix(),
-			},
-		),
+		goldmark.WithExtensions(extensions...),
 		goldmark.WithParserOptions(parserOpts...),
 		goldmark.WithRendererOptions(rendererOpts...),
 	)
