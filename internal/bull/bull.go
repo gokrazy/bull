@@ -10,7 +10,6 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/gokrazy/bull"
-	"github.com/yuin/goldmark/ast"
 )
 
 const bullPrefix = "_bull/"
@@ -69,8 +68,6 @@ type Customization struct {
 	// AfterPageRead is a hook that is called after a page is read and can be
 	// used to modify or replace the content.
 	AfterPageRead func([]byte) []byte
-
-	AfterPageParse func(ast.Node) ast.Node
 
 	// TODO: markdown goldmark option hook?
 }

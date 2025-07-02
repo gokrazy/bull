@@ -96,12 +96,6 @@ func (b *bullServer) renderMD(md string) ast.Node {
 		return ast.WalkContinue, nil
 	})
 
-	if b.customization != nil {
-		if app := b.customization.AfterPageParse; app != nil {
-			doc = app(doc)
-		}
-	}
-
 	return doc
 }
 
