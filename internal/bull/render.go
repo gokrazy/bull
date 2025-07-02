@@ -70,7 +70,9 @@ func (b *bullServer) converter() goldmark.Markdown {
 		},
 	}
 	if b.customization != nil {
-		extensions = append(extensions, b.customization.GoldmarkExtensions...)
+		extensions = append(extensions, b.customization.GoldmarkExtensionsFor(&CustomizationContext{
+			HardWraps: b.contentSettings.HardWraps,
+		})...)
 	}
 	return goldmark.New(
 		goldmark.WithExtensions(extensions...),

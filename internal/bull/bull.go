@@ -65,14 +65,21 @@ func usage(fset *flag.FlagSet, help string) func() {
 	}
 }
 
+// CustomizationContext contains all pieces of bull configuration that might be
+// relevant for customization. For example, to render Goldmark AST nodes in a
+// different way, the custom renderer needs to know if hard wraps are enabled.
+type CustomizationContext struct {
+	HardWraps bool
+}
+
 type Customization struct {
 	// AfterPageRead is a hook that is called after a page is read and can be
 	// used to modify or replace the content.
 	AfterPageRead func([]byte) []byte
 
-	// GoldmarkExtensions allows you to install custom extensions for the
+	// GoldmarkExtensionsFor allows you to install custom extensions for the
 	// goldmark markdown renderer.
-	GoldmarkExtensions []goldmark.Extender
+	GoldmarkExtensionsFor func(*CustomizationContext) []goldmark.Extender
 }
 
 func (c *Customization) Runbull() error {
