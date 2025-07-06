@@ -69,7 +69,7 @@ func (b *bullServer) converter() goldmark.Markdown {
 			URLBullPrefix: b.URLBullPrefix(),
 		},
 	}
-	if b.customization != nil {
+	if b.customization != nil && b.customization.GoldmarkExtensionsFor != nil {
 		extensions = append(extensions, b.customization.GoldmarkExtensionsFor(&CustomizationContext{
 			HardWraps: b.contentSettings.HardWraps,
 		})...)
