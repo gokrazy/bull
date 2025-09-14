@@ -12,8 +12,9 @@ import (
 )
 
 type uploadResponse struct {
-	File      string `json:"file"`
-	SavedPath string `json:"savedPath"`
+	File          string `json:"file"`          // Original filename
+	SavedFullPath string `json:"savedFullPath"` // Full path to the saved file
+	SavedFilename string `json:"savedFilename"` // Filename as saved
 }
 
 // upload Saves a file to <page>-<timestamp>-<original filename>
@@ -22,8 +23,8 @@ func (b *bullServer) upload(w http.ResponseWriter, r *http.Request) error {
 		return httpError(http.StatusForbidden, fmt.Errorf("running in read-only mode (-editor= flag)"))
 	}
 
-	// Limit the size of the memory to 10MB
-	err := r.ParseMultipartForm(10 << 20)
+	// Limit the size of the uploaded file to 25MB
+	err := r.ParseMultipartForm(25 << 20)
 	if err != nil {
 		return err
 	}
@@ -52,8 +53,9 @@ func (b *bullServer) upload(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	resp := uploadResponse{
-		File:      handler.Filename,
-		SavedPath: savedFileName,
+		File:          handler.Filename,
+		SavedFilename: filepath.Base(savedFileName),
+		SavedFullPath: savedFileName,
 	}
 	data, err := json.Marshal(resp)
 	if err != nil {
