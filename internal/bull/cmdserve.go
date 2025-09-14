@@ -199,6 +199,7 @@ func (c *Customization) serve(args []string) error {
 	http.Handle("GET "+urlBullPrefix+"buildinfo", handleError(bull.buildinfo))
 	http.Handle("GET "+urlBullPrefix+"watch/{page...}", handleError(bull.handleWatch))
 	http.Handle("POST "+urlBullPrefix+"save/{page...}", handleError(bull.save))
+	http.Handle("POST "+urlBullPrefix+"upload/{page...}", handleError(bull.upload))
 	http.Handle("GET "+urlBullPrefix+"suggest", handleError(bull.suggest))
 	http.Handle("GET "+urlBullPrefix+"search", handleError(bull.search))
 	http.Handle("GET "+urlBullPrefix+"_search", handleError(bull.searchAPI))
