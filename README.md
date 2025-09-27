@@ -1,4 +1,6 @@
-# gokrazy/bull 🐮
+# gokrazy/bull
+
+<img src="https://raw.githubusercontent.com/gokrazy/bull/refs/heads/main/internal/assets/svg/bull-logo.svg" width="200" align="right" alt="bull logo">
 
 * bull is a minimalist bullet journaling program
 * less is more
