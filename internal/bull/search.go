@@ -63,7 +63,7 @@ type match struct {
 	Type          string   `json:"type"`
 	PageName      string   `json:"page_name"`
 	MatchingLines []string `json:"matching_lines"`
-	nameMatch     bool
+	score         float64
 }
 
 func (b *bullServer) internalsearch(ctx context.Context, query string, progress chan<- progressUpdate) ([]match, error) {
@@ -119,11 +119,21 @@ func (b *bullServer) internalsearch(ctx context.Context, query string, progress 
 				if len(matches) == 0 {
 					continue
 				}
+				var score float64
+				if len(nameMatches) > 0 {
+					if pg.PageName == query {
+						score = 1 // exact page match
+					} else if strings.HasPrefix(pg.PageName, query) {
+						score = 0.9 // prefix match
+					} else {
+						score = 0.5 // name match
+					}
+				}
 				m := match{
 					Type:          "result",
 					PageName:      pg.PageName,
 					MatchingLines: matches,
-					nameMatch:     len(nameMatches) > 0,
+					score:         score,
 				}
 				resultsMu.Lock()
 				results = append(results, m)
@@ -143,24 +153,14 @@ func (b *bullServer) internalsearch(ctx context.Context, query string, progress 
 	progressCanc()
 	progressg.Wait()
 
-	sort.Slice(results, func(i, j int) bool {
-		return results[i].PageName < results[j].PageName
-	})
-
 	sort.SliceStable(results, func(i, j int) bool {
 		ri := results[i]
 		rj := results[j]
-		if ri.nameMatch && !rj.nameMatch {
-			return true
+		if ri.score == rj.score {
+			// both are the same kind of match
+			return ri.PageName < rj.PageName
 		}
-		if !ri.nameMatch && rj.nameMatch {
-			return false
-		}
-		// both are a page name match
-
-		// TODO: rank by some other criterion
-
-		return false
+		return ri.score > rj.score
 	})
 
 	return results, nil
