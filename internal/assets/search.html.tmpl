@@ -119,19 +119,32 @@
 	}, 500);
     }
 
+    function queryFromHash() {
+	const hash = window.location.hash;
+	if (hash !== undefined && hash !== "" && hash !== "#") {
+	    const params = hash.substr(1); // strip #
+	    var p = new URLSearchParams(params);
+	    return p.get('q');
+	}
+	return '{{ .Query }}';
+    }
+
+    window.addEventListener("hashchange", () => {
+	const newQuery = queryFromHash();
+	console.log("query has changed to", newQuery, "(from hash)");
+	if (newQuery !== '') {
+	    q.value = newQuery;
+	    search(newQuery);
+	}
+    });
+
     const submit = document.getElementById('bull_submit');
     submit.style.display = 'none';
     submit.onclick = function(event) {
 	event.preventDefault();
     }
 
-    var query = '{{ .Query }}';
-    const hash = window.location.hash;
-    if (hash !== undefined && hash !== "" && hash !== "#") {
-	const params = hash.substr(1); // strip #
-	var p = new URLSearchParams(params);
-	query = p.get('q');
-    }
+    const query = queryFromHash();
 
     if (query.length > 0) {
 	console.log('restoring search for', query, 'from URL hash');
