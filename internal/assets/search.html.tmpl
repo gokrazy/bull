@@ -34,8 +34,14 @@
 
     function renderResults(q, results) {
 	var html = '<p>Search results: ' + results.length + '</p>';
-	// TODO: check if the page exists once we introduce fuzzy results
-	if (results.length == 0) {
+	var exactMatch = false;
+	for (result of results) {
+	    if (result.page_name === q) {
+		exactMatch = true;
+		break;
+	    }
+	}
+	if (!exactMatch) {
 	    var u = new URL(window.location);
 	    u.pathname = '{{ .URLBullPrefix }}edit/' + q;
 	    u.hash = '';
