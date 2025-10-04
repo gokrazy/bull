@@ -1,5 +1,5 @@
 <header id="bull_navbar">
-  <a id="bull_nav_index" href="{{ .URLPrefix }}" style="font-size: 200%; margin-top: .1em"><img src="/_bull/svg/bull-logo.svg" border="0"></a>
+  <a id="bull_nav_index" href="{{ .URLPrefix }}" style="font-size: 200%; margin-top: .1em"><img src="/_bull/svg/bull-logo.svg?cachebust={{ call .StaticHash "svg/bull-logo.svg" }}" border="0"></a>
   <div>
     <a href="{{ .URLPrefix }}"><h1>bull</h1></a>
     <nav id="bull_desktopnav">

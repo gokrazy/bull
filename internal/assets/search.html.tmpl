@@ -153,7 +153,7 @@
     }
   </script>
 
-  <script src="{{ .URLBullPrefix }}js/nav.js"></script>
+  <script src="{{ .URLBullPrefix }}js/nav.js?cachebust={{ call .StaticHash "js/nav.js" }}"></script>
 
 </body>
 </html>

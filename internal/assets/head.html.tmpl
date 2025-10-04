@@ -47,5 +47,5 @@
     }
   </style>
   <link rel="stylesheet" type="text/css" href="{{ .URLBullPrefix }}css/bull.css?cachebust={{ call .StaticHash "css/bull.css" }}">
-  <link rel="search" type="application/opensearchdescription+xml" href="{{ .URLBullPrefix }}opensearch.xml">
+  <link rel="search" type="application/opensearchdescription+xml" href="{{ .URLBullPrefix }}opensearch.xml?cachebust={{ call .StaticHash "opensearch.xml.tmpl" }}">
 </head>
