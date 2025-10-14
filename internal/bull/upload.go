@@ -24,8 +24,7 @@ func (b *bullServer) upload(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// Limit the size of the uploaded file to 25MB
-	err := r.ParseMultipartForm(25 << 20)
-	if err != nil {
+	if err := r.ParseMultipartForm(25 << 20); err != nil {
 		return err
 	}
 
