@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand/v2"
 	"net/http"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 type uploadResponse struct {
@@ -36,12 +36,13 @@ func (b *bullServer) upload(w http.ResponseWriter, r *http.Request) error {
 	defer file.Close()
 
 	pageName := pageFromURL(r)
-	savedFileName := fmt.Sprintf("%s-%d-%s", pageName, time.Now().UnixMilli(), handler.Filename)
+	salt := rand.Int64N(899_999_999_999_999) + 100_000_000_000_000 // Random 15 digit number
+	savedFileName := fmt.Sprintf("%s-%d-%s", pageName, salt, handler.Filename)
 
 	if err := mkdirAll(b.content, filepath.Dir(savedFileName), 0755); err != nil {
 		return err
 	}
-	f, err := b.content.OpenFile(savedFileName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+	f, err := b.content.OpenFile(savedFileName, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
 	if err != nil {
 		return err
 	}
