@@ -32,7 +32,6 @@ func (b *bullServer) upload(w http.ResponseWriter, r *http.Request) error {
 	file, handler, err := r.FormFile("file")
 	if err != nil {
 		log.Printf("error reading file: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
 		return err
 	}
 	defer file.Close()
