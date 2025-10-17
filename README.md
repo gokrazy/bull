@@ -33,6 +33,14 @@ Then, change into the newly created bull directory and run:
 
     go install ./cmd/bull
 
+If you want to modify the TypeScript code (for codemirror editor integration),
+you also need the TypeScript compiler (`tsc`). You can [use
+Nix](https://michael.stapelberg.ch/posts/2025-07-27-dev-shells-with-nix-4-quick-examples/)
+for that:
+
+    nix develop
+	./regenerate.sh
+
 ## details
 
 bull uses the yuin/goldmark markdown renderer, specifically:

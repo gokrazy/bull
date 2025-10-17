@@ -65,13 +65,13 @@ let editor = new EditorView({
 	markdown(),
 	EditorView.lineWrapping
     ],
-    parent: document.getElementById('cm-goes-here')
+    parent: document.getElementById('cm-goes-here')!
 })
 
 editor.focus();
 
 // Inject the editor content into the <form> before submit
-document.getElementById('bull-save').onclick = function(_unused) {
+document.getElementById('bull-save')!.onclick = function(_unused) {
     var bullMarkdown = <HTMLTextAreaElement>document.getElementById('bull-markdown');
     bullMarkdown.value = editor.state.doc.toString();
 }

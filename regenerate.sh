@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -euo pipefail
+
 if [ ! -d "third_party/codemirror/node_modules" ]
 then
     echo "Cannot re-generate CodeMirror JavaScript bundle:" >&2
@@ -14,6 +16,10 @@ then
     exit 2
 fi
 
+# Run tsc (TypeScript compiler) for type-checking
+tsc --noEmit
+
+# Bundle npm dependencies (and TypeScript code)
 export NODE_PATH=$PWD/third_party/codemirror/node_modules
 go tool esbuild \
    internal/codemirror/bull-codemirror.ts \
