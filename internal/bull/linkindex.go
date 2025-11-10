@@ -30,7 +30,7 @@ type idx struct {
 func (b *bullServer) linkTargets(pg *page) ([]string, error) {
 	var targets []string
 
-	doc := b.parseMD(pg.Content)
+	doc := b.parseMD(pg, pg.Content)
 	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if !entering {
 			return ast.WalkContinue, nil

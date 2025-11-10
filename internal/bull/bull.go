@@ -28,7 +28,8 @@ func defaultContentDir() string {
 
 func loadContentSettings(content *os.Root) (bull.ContentSettings, error) {
 	cs := bull.ContentSettings{
-		HardWraps: true, // like SilverBullet
+		HardWraps:           true, // like SilverBullet
+		InteractiveTaskList: true,
 	}
 	csf, err := content.Open("_bull/content-settings.toml")
 	if err != nil {

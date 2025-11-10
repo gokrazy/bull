@@ -15,6 +15,7 @@ import (
 
 	"github.com/gokrazy/bull/internal/assets"
 	"github.com/gokrazy/bull/internal/hashtag"
+	"github.com/gokrazy/bull/internal/itasklist"
 	"github.com/gokrazy/bull/internal/linkify"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
@@ -41,7 +42,7 @@ func (r *resolver) ResolveWikilink(n *wikilink.Node) (destination []byte, err er
 	return append([]byte(r.root), []byte(url.PathEscape(string(n.Target)))...), nil
 }
 
-func (b *bullServer) converter() goldmark.Markdown {
+func (b *bullServer) converter(pg *page) goldmark.Markdown {
 	var parserOpts []parser.Option
 	parserOpts = append(parserOpts, parser.WithAutoHeadingID())
 	var rendererOpts []renderer.Option
@@ -58,7 +59,6 @@ func (b *bullServer) converter() goldmark.Markdown {
 		&linkify.Extender{},
 		extension.Table,
 		extension.Strikethrough,
-		extension.TaskList,
 		&wikilink.Extender{
 			Resolver: &resolver{
 				root:        b.root,
@@ -68,6 +68,14 @@ func (b *bullServer) converter() goldmark.Markdown {
 		&hashtag.Extender{
 			URLBullPrefix: b.URLBullPrefix(),
 		},
+	}
+	if b.contentSettings.InteractiveTaskList && b.editor != "" {
+		extensions = append(extensions, &itasklist.Extender{
+			URLBullPrefix: b.URLBullPrefix(),
+			PageURLPath:   pg.URLPath(),
+		})
+	} else {
+		extensions = append(extensions, extension.TaskList)
 	}
 	if b.customization != nil && b.customization.GoldmarkExtensionsFor != nil {
 		extensions = append(extensions, b.customization.GoldmarkExtensionsFor(&CustomizationContext{
@@ -81,8 +89,8 @@ func (b *bullServer) converter() goldmark.Markdown {
 	)
 }
 
-func (b *bullServer) parseMD(md string) ast.Node {
-	converter := b.converter()
+func (b *bullServer) parseMD(pg *page, md string) ast.Node {
+	converter := b.converter(pg)
 	source := []byte(md)
 	doc := converter.Parser().Parse(text.NewReader(source))
 
@@ -102,14 +110,32 @@ func (b *bullServer) parseMD(md string) ast.Node {
 		return ast.WalkContinue, nil
 	})
 
+	// Wrap all ast.List nodes with a itasklist.Kind node.
+	// NOTE: Until https://github.com/yuin/goldmark/pull/523 is fixed,
+	// we cannot replace the current node in ast.Walk.
+	var lists []*ast.List
+	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		list, ok := n.(*ast.List)
+		if ok && entering {
+			lists = append(lists, list)
+		}
+		return ast.WalkContinue, nil
+	})
+	for _, list := range lists {
+		itl := &itasklist.TaskListNode{}
+		doc.InsertBefore(doc, list, itl)
+		doc.RemoveChild(doc, list)
+		itl.AppendChild(itl, list)
+	}
+
 	return doc
 }
 
-func (b *bullServer) render(md string) string {
+func (b *bullServer) render(pg *page, md string) string {
 	var buf bytes.Buffer
 
-	doc := b.parseMD(md)
-	converter := b.converter()
+	doc := b.parseMD(pg, md)
+	converter := b.converter(pg)
 	err := converter.Renderer().Render(&buf, []byte(md), doc)
 	if err != nil {
 		// TODO: error page template
@@ -228,7 +254,7 @@ func insideOutTitle(fn, contentDir string) string {
 }
 
 func (b *bullServer) renderMarkdown(w http.ResponseWriter, r *http.Request, pg *page, md []byte) error {
-	html := b.render(string(md))
+	html := b.render(pg, string(md))
 	if accept := r.Header.Get("Accept"); accept != "" {
 		// TODO(go1.25): use net/http content negotiation if available:
 		// https://github.com/golang/go/issues/19307

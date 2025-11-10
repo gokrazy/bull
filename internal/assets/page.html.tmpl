@@ -88,6 +88,9 @@
 {{ end }}
 
   <script src="{{ .URLBullPrefix }}js/nav.js?cachebust={{ call .StaticHash "js/nav.js" }}" async></script>
+  {{ if not .ReadOnly }}
+  <script src="{{ .URLBullPrefix }}js/itasklist.js?cachebust={{ call .StaticHash "js/itasklist.js" }}" async></script>
+  {{ end }}
 
 </body>
 </html>

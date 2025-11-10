@@ -205,6 +205,7 @@ func (c *Customization) serve(args []string) error {
 	http.Handle("GET "+urlBullPrefix+"_search", handleError(bull.searchAPI))
 	http.Handle("GET "+urlBullPrefix+"rename/{page...}", handleError(bull.rename))
 	http.Handle("POST "+urlBullPrefix+"_rename/{page...}", handleError(bull.renameAPI))
+	http.Handle("POST "+urlBullPrefix+"_itasklist/{page...}", handleError(bull.itasklistAPI))
 
 	ln, err := net.Listen("tcp", *listenAddr)
 	if err != nil {
