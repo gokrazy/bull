@@ -81,7 +81,7 @@ func (b *bullServer) converter() goldmark.Markdown {
 	)
 }
 
-func (b *bullServer) renderMD(md string) ast.Node {
+func (b *bullServer) parseMD(md string) ast.Node {
 	converter := b.converter()
 	source := []byte(md)
 	doc := converter.Parser().Parse(text.NewReader(source))
@@ -108,7 +108,7 @@ func (b *bullServer) renderMD(md string) ast.Node {
 func (b *bullServer) render(md string) string {
 	var buf bytes.Buffer
 
-	doc := b.renderMD(md)
+	doc := b.parseMD(md)
 	converter := b.converter()
 	err := converter.Renderer().Render(&buf, []byte(md), doc)
 	if err != nil {
