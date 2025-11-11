@@ -123,8 +123,9 @@ func (b *bullServer) parseMD(pg *page, md string) ast.Node {
 	})
 	for _, list := range lists {
 		itl := &itasklist.TaskListNode{}
-		doc.InsertBefore(doc, list, itl)
-		doc.RemoveChild(doc, list)
+		parent := list.Parent()
+		parent.InsertBefore(parent, list, itl)
+		parent.RemoveChild(parent, list)
 		itl.AppendChild(itl, list)
 	}
 
