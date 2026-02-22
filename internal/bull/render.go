@@ -39,7 +39,7 @@ func (r *resolver) ResolveWikilink(n *wikilink.Node) (destination []byte, err er
 	//
 	// This allows creating pages by linking to them, following the link,
 	// then clicking Create page in the top menu bar.
-	return append([]byte(r.root), []byte(url.PathEscape(string(n.Target)))...), nil
+	return append([]byte(r.root), []byte((&url.URL{Path: string(n.Target)}).EscapedPath())...), nil
 }
 
 func (b *bullServer) converter(pg *page) goldmark.Markdown {

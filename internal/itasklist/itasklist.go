@@ -102,7 +102,7 @@ var _ parser.InlineParser = (*TaskItemParser)(nil)
 
 type TaskListRenderer struct {
 	URLBullPrefix string
-	PageURLPath   string // already escaped with url.PathEscape
+	PageURLPath   string // already escaped with url.URL.EscapedPath
 }
 
 func (r *TaskListRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
@@ -147,7 +147,7 @@ var _ renderer.NodeRenderer = (*TaskItemRenderer)(nil)
 
 type Extender struct {
 	URLBullPrefix string
-	PageURLPath   string // already escaped with url.PathEscape
+	PageURLPath   string // already escaped with url.URL.EscapedPath
 }
 
 func (e *Extender) Extend(m goldmark.Markdown) {

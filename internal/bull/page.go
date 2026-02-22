@@ -49,12 +49,7 @@ func (p *page) IsGenerated() bool {
 }
 
 func (p *page) URLPath() string {
-	if p.IsGenerated() {
-		// Do not escape slashes to %2f for generated pages;
-		// they are only served when accessed with a slash.
-		return p.PageName
-	}
-	return url.PathEscape(p.PageName)
+	return (&url.URL{Path: p.PageName}).EscapedPath()
 }
 
 var homeDir = os.Getenv("HOME")

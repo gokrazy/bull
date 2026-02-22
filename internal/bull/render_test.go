@@ -30,6 +30,8 @@ This line ends in a #endinghashtag
 
 wiki link: [[maybe consider?]]
 
+subdirectory wiki link: [[best/stuff]]
+
 full URL: https://github.com/gokrazy/bull
 
 full insecure URL: http://localhost:3333/
@@ -120,6 +122,10 @@ something profound
 		}
 
 		if want := "http://go.dev/cl/1234"; !targets[want] {
+			t.Errorf("GET /: response does not link to %q", want)
+		}
+
+		if want := "/best/stuff"; !targets[want] {
 			t.Errorf("GET /: response does not link to %q", want)
 		}
 

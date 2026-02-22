@@ -45,7 +45,7 @@ func (b *bullServer) renderNotFound(w http.ResponseWriter, r *http.Request) erro
 
 To create this page <a href="%sedit/%s">click here</a> or press <kbd>Ctrl/Meta</kbd> + <kbd>E</kbd>.
 
-`, pageName, b.URLBullPrefix(), url.PathEscape(pageName))
+`, pageName, b.URLBullPrefix(), (&url.URL{Path: pageName}).EscapedPath())
 	if pageName == "index" {
 		nf, err := b.indexNotFound()
 		if err != nil {
