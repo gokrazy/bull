@@ -158,7 +158,9 @@ func (b *bullServer) serveStaticFile(w http.ResponseWriter, r *http.Request) err
 	}
 	if st.IsDir() {
 		q := url.Values{
-			"dir": []string{staticFn},
+			"dir": []string{
+				strings.TrimSuffix(staticFn, "/"),
+			},
 		}
 		target := (&url.URL{
 			Path:     b.URLBullPrefix() + "browse",
