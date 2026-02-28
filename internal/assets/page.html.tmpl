@@ -91,6 +91,9 @@
   {{ if not .ReadOnly }}
   <script src="{{ .URLBullPrefix }}js/itasklist.js?cachebust={{ call .StaticHash "js/itasklist.js" }}" async></script>
   {{ end }}
+  {{ if eq .Page.Class "bull_gen_browse" }}
+  <script src="{{ .URLBullPrefix }}js/browse.js?cachebust={{ call .StaticHash "js/browse.js" }}" async></script>
+  {{ end }}
 
 </body>
 </html>

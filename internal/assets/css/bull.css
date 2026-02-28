@@ -148,6 +148,22 @@ main table tr:nth-child(even) {
     background-color: #eee;
 }
 
+.bull_gen_browse tr {
+    cursor: pointer;
+}
+
+.bull_gen_browse tr.bull_browse_selected td:first-child {
+    position: relative;
+}
+
+.bull_gen_browse tr.bull_browse_selected td:first-child::before {
+    content: '▶';
+    position: absolute;
+    right: 100%;
+    margin-right: .25rem;
+    font-size: .8rem;
+}
+
 .bull_gen_browse th a,
 .bull_gen_browse th a:visited {
     color: #fff;
