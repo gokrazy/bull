@@ -13,11 +13,12 @@ import (
 )
 
 type browse struct {
-	urlPrefix string
-	dir       string
-	sortby    string
-	sortorder string
-	pages     []page
+	urlPrefix   string
+	dir         string
+	sortby      string
+	sortorder   string
+	directories string
+	pages       []page
 }
 
 func (br *browse) prefix() string {
@@ -144,7 +145,11 @@ func (br *browse) browseTable() []string {
 				lines = append(lines, browseTableLine(name, latest))
 				dirs[dir] = time.Time{} // still present, but printed
 			}
-			continue
+			if br.directories == "expand" {
+				// keep going
+			} else {
+				continue
+			}
 		}
 
 		lines = append(lines, browseTableLine("[["+pg.PageName+"]]", pg.ModTime))
@@ -174,11 +179,12 @@ func (b *bullServer) browse(w http.ResponseWriter, r *http.Request) error {
 	readg.Wait()
 
 	br := browse{
-		urlPrefix: b.URLBullPrefix(),
-		dir:       r.FormValue("dir"),
-		sortby:    r.FormValue("sort"),
-		sortorder: r.FormValue("sortorder"),
-		pages:     pages,
+		urlPrefix:   b.URLBullPrefix(),
+		dir:         r.FormValue("dir"),
+		sortby:      r.FormValue("sort"),
+		sortorder:   r.FormValue("sortorder"),
+		directories: r.FormValue("directories"),
+		pages:       pages,
 	}
 	br.maybeFilterFilePrefix()
 	if err := br.sortPages(); err != nil {
@@ -191,6 +197,14 @@ func (b *bullServer) browse(w http.ResponseWriter, r *http.Request) error {
 	} else {
 		fmt.Fprintf(&buf, "# directory browser\n")
 	}
+
+	fmt.Fprintf(&buf, "subdirectories: ")
+	if br.directories == "expand" {
+		fmt.Fprintf(&buf, "[collapse](%sbrowse?dir=%s&sort=%s&sortorder=%s&directories=) • **expand**\n", br.urlPrefix, url.QueryEscape(br.dir), br.sortby, br.sortorder)
+	} else {
+		fmt.Fprintf(&buf, "**collapse** • [expand](%sbrowse?dir=%s&sort=%s&sortorder=%s&directories=expand)\n", br.urlPrefix, url.QueryEscape(br.dir), br.sortby, br.sortorder)
+	}
+
 	fmt.Fprintf(&buf, "| page name [↑](%[1]sbrowse?dir=%[2]s&sort=pagename) [↓](%[1]sbrowse?dir=%[2]s&sort=pagename&sortorder=desc) | last modified [↑](%[1]sbrowse?dir=%[2]s&sort=modtime) [↓](%[1]sbrowse?dir=%[2]s&sort=modtime&sortorder=desc) |\n", br.urlPrefix, url.QueryEscape(br.dir))
 	fmt.Fprintf(&buf, "|-----------|---------------|\n")
 	// TODO: link to .. if dir != ""
