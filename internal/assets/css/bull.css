@@ -148,6 +148,10 @@ main table tr:nth-child(even) {
     background-color: #eee;
 }
 
+.bull_gen_browse td:not(:first-child) {
+    white-space: nowrap;
+}
+
 .bull_gen_browse td a {
     display: inline-block;
     width: 100%;
@@ -186,7 +190,6 @@ main th {
 
 main th, main td {
     padding: .4rem;
-    white-space: nowrap;
 }
 
 main th {
