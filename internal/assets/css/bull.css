@@ -148,8 +148,9 @@ main table tr:nth-child(even) {
     background-color: #eee;
 }
 
-.bull_gen_browse tr {
-    cursor: pointer;
+.bull_gen_browse td a {
+    display: inline-block;
+    width: 100%;
 }
 
 .bull_gen_browse tr.bull_browse_selected td:first-child {
