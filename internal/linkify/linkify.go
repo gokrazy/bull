@@ -19,9 +19,9 @@ var Kind = ast.NewNodeKind("linkify")
 type Node struct {
 	ast.BaseInline
 
-	Link              []byte
-	withSchema        bool
-	leadingWhitespace bool
+	Link       []byte
+	withSchema bool
+	leading    []byte
 }
 
 func (*Node) Kind() ast.NodeKind { return Kind }
@@ -88,6 +88,7 @@ func (p *Parser) Parse(_ ast.Node, block text.Reader, _ parser.Context) ast.Node
 	for skip < len(line) && util.IsSpace(line[skip]) {
 		skip++
 	}
+	leading := line[:skip]
 	line = line[skip:]
 
 	// find the next whitespace character or end of line
@@ -97,21 +98,37 @@ func (p *Parser) Parse(_ ast.Node, block text.Reader, _ parser.Context) ast.Node
 	} else {
 		stop += len(line)
 	}
-	word := line[:stop]
+
+	trimLeft := 0
+	for trimLeft < stop && line[trimLeft] == '(' {
+		trimLeft++
+	}
+	leading = append(leading, line[:trimLeft]...)
+	trimRight := 0
+	for trimRight < stop-trimLeft {
+		switch line[stop-1-trimRight] {
+		case ')', '.', ':', ',':
+			trimRight++
+			continue
+		}
+		break
+	}
+
+	word := line[trimLeft : stop-trimRight]
 	url, withSchema := isURL(word)
 	if !url {
 		return nil
 	}
 
-	seg = seg.WithStart(seg.Start + skip)
-	seg = seg.WithStop(seg.Start + stop)
+	seg = seg.WithStart(seg.Start + skip + trimLeft)
+	seg = seg.WithStop(seg.Start + stop - trimLeft - trimRight)
 	n := Node{
-		Link:              block.Value(seg),
-		withSchema:        withSchema,
-		leadingWhitespace: skip > 0,
+		Link:       block.Value(seg),
+		withSchema: withSchema,
+		leading:    leading,
 	}
 	n.AppendChild(&n, ast.NewTextSegment(seg))
-	block.Advance(skip + seg.Len())
+	block.Advance(skip + trimLeft + seg.Len())
 	return &n
 }
 
@@ -130,8 +147,8 @@ func (r *Renderer) renderLinkify(w util.BufWriter, _ []byte, node ast.Node, ente
 	}
 
 	if entering {
-		if n.leadingWhitespace {
-			w.WriteString(" ")
+		if len(n.leading) > 0 {
+			w.Write(n.leading)
 		}
 		if !n.withSchema {
 			w.WriteString(`<a href="http://` + string(n.Link) + `">`)

@@ -38,6 +38,10 @@ full insecure URL: http://localhost:3333/
 
 naked URL: go.dev/cl/1234
 
+URL in parens: (https://example.com/in-parens)
+
+URL with trailing period: https://example.com/trailing.
+
 -- maybe consider?.md --
 something profound
 `))
@@ -122,6 +126,14 @@ something profound
 		}
 
 		if want := "http://go.dev/cl/1234"; !targets[want] {
+			t.Errorf("GET /: response does not link to %q", want)
+		}
+
+		if want := "https://example.com/in-parens"; !targets[want] {
+			t.Errorf("GET /: response does not link to %q", want)
+		}
+
+		if want := "https://example.com/trailing"; !targets[want] {
 			t.Errorf("GET /: response does not link to %q", want)
 		}
 
