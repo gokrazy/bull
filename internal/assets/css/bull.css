@@ -284,3 +284,13 @@ main hr {
     }
 
 }
+
+@media print {
+    #bull_navbar {
+	display: none;
+    }
+
+    .bull_rename {
+	display: none;
+    }
+}
