@@ -3,9 +3,10 @@ package bull
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/google/renameio/v2"
 )
 
 func (b *bullServer) save(w http.ResponseWriter, r *http.Request) error {
@@ -26,9 +27,6 @@ func (b *bullServer) save(w http.ResponseWriter, r *http.Request) error {
 	pageName := pageFromURL(r)
 	possibilities := page2files(pageName)
 
-	// TODO(go1.25): use https://github.com/google/renameio/ to make writes
-	// safer once Go 1.25 ships os.Root.Rename.
-
 	var firstFn string
 	for _, fn := range possibilities {
 		_, err := b.content.Stat(fn)
@@ -45,15 +43,15 @@ func (b *bullServer) save(w http.ResponseWriter, r *http.Request) error {
 	if err := mkdirAll(b.content, filepath.Dir(firstFn), 0755); err != nil {
 		return err
 	}
-	f, err := b.content.OpenFile(firstFn, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+	pf, err := renameio.NewPendingFile(firstFn, renameio.WithRoot(b.content))
 	if err != nil {
 		return err
 	}
-	defer f.Close()
-	if _, err := f.Write([]byte(md)); err != nil {
+	defer pf.Cleanup()
+	if _, err := pf.Write([]byte(md)); err != nil {
 		return err
 	}
-	if err := f.Close(); err != nil {
+	if err := pf.CloseAtomicallyReplace(); err != nil {
 		return err
 	}
 
