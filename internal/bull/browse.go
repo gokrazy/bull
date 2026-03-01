@@ -2,10 +2,12 @@ package bull
 
 import (
 	"bytes"
+	"cmp"
 	"fmt"
 	"net/http"
 	"net/url"
 	"path"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -70,12 +72,18 @@ func (br *browse) sortPages() error {
 	switch br.sortby {
 	case "modtime":
 		if br.sortorder == "desc" {
-			sort.SliceStable(br.pages, func(i, j int) bool {
-				return br.pages[i].ModTime.After(br.pages[j].ModTime)
+			slices.SortStableFunc(br.pages, func(a, b page) int {
+				return cmp.Or(
+					b.ModTime.Compare(a.ModTime),        // descending modtime
+					cmp.Compare(a.PageName, b.PageName), // ascending tiebreaker
+				)
 			})
 		} else {
-			sort.SliceStable(br.pages, func(i, j int) bool {
-				return br.pages[i].ModTime.Before(br.pages[j].ModTime)
+			slices.SortStableFunc(br.pages, func(a, b page) int {
+				return cmp.Or(
+					a.ModTime.Compare(b.ModTime),        // ascending modtime
+					cmp.Compare(a.PageName, b.PageName), // ascending tiebreaker
+				)
 			})
 		}
 
