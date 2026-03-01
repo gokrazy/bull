@@ -46,7 +46,7 @@ func (b *bullServer) search(w http.ResponseWriter, r *http.Request) error {
 func grep(content, query string) []string {
 	queryl := strings.ToLower(query)
 	var matches []string
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		if strings.Contains(strings.ToLower(line), queryl) {
 			matches = append(matches, line)
 		}
@@ -83,9 +83,7 @@ func (b *bullServer) internalsearch(ctx context.Context, query string, progress 
 	progressCtx, progressCanc := context.WithCancel(ctx)
 	defer progressCanc()
 	if progress != nil {
-		progressg.Add(1)
-		go func() {
-			defer progressg.Done()
+		progressg.Go(func() {
 			for {
 				select {
 				case <-progressCtx.Done():
@@ -97,7 +95,7 @@ func (b *bullServer) internalsearch(ctx context.Context, query string, progress 
 					}
 				}
 			}
-		}()
+		})
 	}
 	for range runtime.NumCPU() {
 		readg.Go(func() error {

@@ -57,8 +57,8 @@ var homeDir = os.Getenv("HOME")
 func briefHome(absPath string) string {
 	// Replace $HOME with ~ for brevity: ~/keep/_bull/mostrecent
 	prefix := homeDir + string(filepath.Separator)
-	if strings.HasPrefix(absPath, prefix) {
-		return "~/" + strings.TrimPrefix(absPath, prefix)
+	if after, ok := strings.CutPrefix(absPath, prefix); ok {
+		return "~/" + after
 	}
 	return absPath
 }
@@ -69,11 +69,11 @@ func isMarkdown(file string) bool {
 }
 
 func file2page(file string) string {
-	if strings.HasSuffix(file, ".md") {
-		return strings.TrimSuffix(file, ".md")
+	if before, ok := strings.CutSuffix(file, ".md"); ok {
+		return before
 	}
-	if strings.HasSuffix(file, ".markdown") {
-		return strings.TrimSuffix(file, ".markdown")
+	if before, ok := strings.CutSuffix(file, ".markdown"); ok {
+		return before
 	}
 	return file // not a markdown file
 }

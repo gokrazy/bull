@@ -64,7 +64,7 @@ func (b *bullServer) suggest(w http.ResponseWriter, r *http.Request) error {
 		suggestions[idx] = result.PageName
 	}
 	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode([]interface{}{
+	if err := json.NewEncoder(&buf).Encode([]any{
 		query,
 		suggestions,
 	}); err != nil {

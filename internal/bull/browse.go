@@ -173,14 +173,12 @@ func (b *bullServer) browse(w http.ResponseWriter, r *http.Request) error {
 		pages []page
 		readg sync.WaitGroup
 	)
-	readg.Add(1)
 	// one reading goroutine is sufficient, we only collect metadata
-	go func() {
-		defer readg.Done()
+	readg.Go(func() {
 		for pg := range i.readq {
 			pages = append(pages, pg)
 		}
-	}()
+	})
 	if err := i.walk(); err != nil {
 		return err
 	}

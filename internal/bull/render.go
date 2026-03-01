@@ -210,7 +210,7 @@ func (b *bullServer) renderWithBacklinks(w http.ResponseWriter, r *http.Request,
 
 `)...)
 		for _, linker := range linkers {
-			wb = append(wb, []byte(fmt.Sprintf("* [[%s]]\n", file2page(linker)))...)
+			wb = append(wb, fmt.Appendf(nil, "* [[%s]]\n", file2page(linker))...)
 		}
 	}
 
