@@ -158,13 +158,20 @@ func (c *Customization) serve(args []string) error {
 	bull.idx = idx
 	log.Printf("discovered in %.2fs: directories: %d, pages: %d, links: %d", time.Since(start).Seconds(), idx.dirs, idx.pages, len(idx.backlinks))
 
-	// TODO: serve a default favicon if there is none in the content directory
-
 	urlBullPrefix := bull.URLBullPrefix()
-	http.Handle(bull.root+"{page...}", handleError(bull.handleRender))
-	http.Handle(urlBullPrefix+"edit/{page...}", handleError(bull.edit))
 
 	var zeroModTime time.Time
+
+	// Serve favicon.ico at the root so that browsers and crawlers
+	// that probe /favicon.ico find it without needing <link> tags.
+	faviconICO, _ := assets.FS.ReadFile("favicon.ico")
+	http.HandleFunc(bull.root+"favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		cache(w)
+		http.ServeContent(w, r, "favicon.ico", zeroModTime, bytes.NewReader(faviconICO))
+	})
+
+	http.Handle(bull.root+"{page...}", handleError(bull.handleRender))
+	http.Handle(urlBullPrefix+"edit/{page...}", handleError(bull.edit))
 	for _, variant := range []struct {
 		name    string
 		content []byte
@@ -198,6 +205,9 @@ func (c *Customization) serve(args []string) error {
 		http.Handle(urlBullPrefix+"js/", handleStaticFile)
 		http.Handle(urlBullPrefix+"css/", handleStaticFile)
 		http.Handle(urlBullPrefix+"svg/", handleStaticFile)
+		http.Handle(urlBullPrefix+"favicon.ico", handleStaticFile)
+		http.Handle(urlBullPrefix+"favicon-32x32.png", handleStaticFile)
+		http.Handle(urlBullPrefix+"apple-touch-icon.png", handleStaticFile)
 		http.Handle(urlBullPrefix+"opensearch.xml", http.StripPrefix(urlBullPrefix, handleError(bull.opensearch)))
 	}
 	http.Handle("GET "+urlBullPrefix+"browse", handleError(bull.browse))
