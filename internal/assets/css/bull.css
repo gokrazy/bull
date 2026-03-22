@@ -152,6 +152,12 @@ main table tr:nth-child(even) {
     white-space: nowrap;
 }
 
+/* Avoid changes to the column width by fixing it to 20rem. */
+/* Otherwise, the relative time stamps jump around. */
+.bull_gen_browse td:last-child {
+    width: 20rem;
+}
+
 .bull_gen_browse td a {
     display: inline-block;
     width: 100%;

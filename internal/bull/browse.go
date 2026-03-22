@@ -135,13 +135,26 @@ func (br *browse) browseDirLink(dir string) string {
 	}).String()
 }
 
-func browseTableLine(name string, modTime time.Time) string {
-	return fmt.Sprintf("| %s | %s |\n",
-		name,
-		modTime.Format("2006-01-02 15:04:05 Z07:00"))
+func browseTableLine(name string, modTime time.Time, now time.Time) string {
+	ts := modTime.Format("2006-01-02 15:04:05")
+	ts += " • " + modTime.Format("Mon")
+	if ago := now.Sub(modTime); ago >= 0 && ago < 24*time.Hour {
+		hours := int(ago.Hours())
+		minutes := int(ago.Minutes()) % 60
+		seconds := int(ago.Seconds()) % 60
+		if hours > 0 {
+			ts += fmt.Sprintf(" • %dh %dm ago", hours, minutes)
+		} else if minutes > 0 {
+			ts += fmt.Sprintf(" • %dm %ds ago", minutes, seconds)
+		} else {
+			ts += fmt.Sprintf(" • %ds ago", seconds)
+		}
+	}
+	return fmt.Sprintf("| %s | %s |\n", name, ts)
 }
 
 func (br *browse) browseTable() []string {
+	now := time.Now()
 	dirs := br.dirs()
 	lines := make([]string, 0, len(br.pages))
 	for _, pg := range br.pages {
@@ -150,7 +163,7 @@ func (br *browse) browseTable() []string {
 				// This is the first time we encounter a page within this
 				// directory, so produce a table line for the directory.
 				name := fmt.Sprintf("[%s/](%s)", dir, br.browseDirLink(dir))
-				lines = append(lines, browseTableLine(name, latest))
+				lines = append(lines, browseTableLine(name, latest, now))
 				dirs[dir] = time.Time{} // still present, but printed
 			}
 			if br.directories == "expand" {
@@ -160,7 +173,7 @@ func (br *browse) browseTable() []string {
 			}
 		}
 
-		lines = append(lines, browseTableLine("[["+pg.PageName+"]]", pg.ModTime))
+		lines = append(lines, browseTableLine("[["+pg.PageName+"]]", pg.ModTime, now))
 	}
 	return lines
 }
