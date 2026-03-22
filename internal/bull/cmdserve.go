@@ -160,14 +160,14 @@ func (c *Customization) serve(args []string) error {
 
 	urlBullPrefix := bull.URLBullPrefix()
 
-	var zeroModTime time.Time
+	startupTime := time.Now()
 
 	// Serve favicon.ico at the root so that browsers and crawlers
 	// that probe /favicon.ico find it without needing <link> tags.
 	faviconICO, _ := assets.FS.ReadFile("favicon.ico")
 	http.HandleFunc(bull.root+"favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		cache(w)
-		http.ServeContent(w, r, "favicon.ico", zeroModTime, bytes.NewReader(faviconICO))
+		http.ServeContent(w, r, "favicon.ico", startupTime, bytes.NewReader(faviconICO))
 	})
 
 	http.Handle(bull.root+"{page...}", handleError(bull.handleRender))
@@ -183,7 +183,7 @@ func (c *Customization) serve(args []string) error {
 		basename := "go" + variant.name + ".ttf"
 		http.HandleFunc(urlBullPrefix+"gofont/"+basename, func(w http.ResponseWriter, r *http.Request) {
 			cache(w)
-			http.ServeContent(w, r, basename, zeroModTime, bytes.NewReader(variant.content))
+			http.ServeContent(w, r, basename, startupTime, bytes.NewReader(variant.content))
 		})
 	}
 	{
@@ -191,7 +191,7 @@ func (c *Customization) serve(args []string) error {
 		http.HandleFunc(urlBullPrefix+"js/"+basename,
 			func(w http.ResponseWriter, r *http.Request) {
 				cache(w)
-				http.ServeContent(w, r, basename, zeroModTime, bytes.NewReader(codemirror.BullCodemirror))
+				http.ServeContent(w, r, basename, startupTime, bytes.NewReader(codemirror.BullCodemirror))
 			})
 		var assetsFS fs.FS = assets.FS
 		if static != nil {
