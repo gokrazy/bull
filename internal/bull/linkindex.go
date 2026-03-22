@@ -10,7 +10,6 @@ import (
 	"path"
 	"runtime"
 	"slices"
-	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -22,6 +21,8 @@ import (
 
 type idx struct {
 	dirs, pages uint64
+	// links maps from page name to target page names (forward index).
+	links map[string][]string
 	// backlinks maps from page name (e.g. index) to
 	// page names that contain a link to that page (e.g. SETTINGS, projects, …).
 	backlinks map[string][]string
@@ -44,7 +45,7 @@ func (b *bullServer) linkTargets(pg *page) ([]string, error) {
 		return ast.WalkContinue, nil
 	})
 
-	sort.Strings(targets)
+	slices.Sort(targets)
 	return slices.Compact(targets), nil
 }
 
@@ -92,6 +93,9 @@ func (i *indexer) walkN(dir string) error {
 	for _, dirent := range dirents {
 		name := dirent.Name()
 		if dirent.IsDir() {
+			if name == ".git" {
+				continue
+			}
 			i.dirDiscovered()
 			// put each discovered directory into the walk queue
 			// so that any goroutine can pick it up
@@ -135,8 +139,8 @@ func (i *indexer) walk() error {
 				// There is some remaining work. Try to obtain the directory
 				// from the walk queue, but time-box the attempt:
 				popctx, popcanc := context.WithTimeout(gctx, 100*time.Millisecond)
-				defer popcanc()
 				dir, err := i.walkq.PopOrWait(popctx)
+				popcanc()
 				if err != nil {
 					if errors.Is(err, context.DeadlineExceeded) {
 						// Some other goroutine might have raced us to picking
@@ -198,22 +202,214 @@ func (b *bullServer) index() (*idx, error) {
 	if err := readg.Wait(); err != nil {
 		return nil, err
 	}
-	// Invert the index
-	// TODO: do we need to check if the target exists?
-	// or is it sufficient that we do not query it because we never render it?
+	return &idx{
+		dirs:      i.dirs.Load(),
+		pages:     i.pages.Load(),
+		links:     links,
+		backlinks: invertLinks(links),
+	}, nil
+}
+
+func invertLinks(links map[string][]string) map[string][]string {
 	backlinks := make(map[string][]string)
 	for pageName, targets := range links {
 		for _, target := range targets {
 			backlinks[target] = append(backlinks[target], pageName)
 		}
 	}
-	for pageName, linkers := range backlinks {
-		sort.Strings(linkers)
-		backlinks[pageName] = linkers
+	for _, linkers := range backlinks {
+		slices.Sort(linkers)
 	}
-	return &idx{
-		dirs:      i.dirs.Load(),
-		pages:     i.pages.Load(),
-		backlinks: backlinks,
-	}, nil
+	return backlinks
+}
+
+func (b *bullServer) updateIndex(pageName string, newTargets []string) {
+	b.idxMu.Lock()
+	defer b.idxMu.Unlock()
+	b.updateIndexLocked(pageName, newTargets)
+}
+
+func (b *bullServer) removeFromIndex(pageName string) {
+	b.idxMu.Lock()
+	defer b.idxMu.Unlock()
+	b.removeFromIndexLocked(pageName)
+}
+
+// indexUpdate pairs a page name with its new link targets for batch operations.
+type indexUpdate struct {
+	pageName string
+	targets  []string
+}
+
+// applyIndexBatchLocked applies multiple removals and updates in a single
+// clone-patch-store cycle, avoiding the O(N * total_pages) cost of calling
+// updateIndexLocked in a loop.
+// Caller must hold b.idxMu.
+func (b *bullServer) applyIndexBatchLocked(removals []string, updates []indexUpdate) {
+	old := b.idx.Load()
+
+	newLinks := make(map[string][]string, len(old.links)+len(updates))
+	maps.Copy(newLinks, old.links)
+	// Shallow clone: the []string value slices are shared with old.backlinks.
+	// This is safe because removeFromSorted/insertIntoSorted never mutate
+	// slices in place — they either return the original slice unchanged
+	// or allocate a new one.
+	newBacklinks := maps.Clone(old.backlinks)
+
+	for _, pageName := range removals {
+		oldTargets := newLinks[pageName]
+		if len(oldTargets) == 0 {
+			continue
+		}
+		delete(newLinks, pageName)
+		patchBacklinks(newBacklinks, pageName, nil, oldTargets)
+	}
+
+	for _, u := range updates {
+		oldTargets := newLinks[u.pageName]
+		newLinks[u.pageName] = u.targets
+		added, removed := diffSorted(oldTargets, u.targets)
+		patchBacklinks(newBacklinks, u.pageName, added, removed)
+	}
+
+	b.idx.Store(&idx{
+		dirs:      old.dirs,
+		pages:     uint64(len(newLinks)),
+		links:     newLinks,
+		backlinks: newBacklinks,
+	})
+}
+
+// removeFromIndexLocked removes a page from the index.
+// Caller must hold b.idxMu.
+func (b *bullServer) removeFromIndexLocked(pageName string) {
+	old := b.idx.Load()
+	oldTargets, ok := old.links[pageName]
+	if !ok {
+		return // already absent
+	}
+
+	newLinks := make(map[string][]string, len(old.links))
+	maps.Copy(newLinks, old.links)
+	delete(newLinks, pageName)
+
+	added, removed := diffSorted(oldTargets, nil)
+	// Shallow clone: the []string value slices are shared with old.backlinks.
+	// This is safe because removeFromSorted/insertIntoSorted never mutate
+	// slices in place — they either return the original slice unchanged
+	// or allocate a new one.
+	newBacklinks := maps.Clone(old.backlinks)
+	patchBacklinks(newBacklinks, pageName, added, removed)
+
+	b.idx.Store(&idx{
+		dirs:      old.dirs,
+		pages:     uint64(len(newLinks)),
+		links:     newLinks,
+		backlinks: newBacklinks,
+	})
+}
+
+// updateIndexLocked updates a single page's links in the index.
+// Caller must hold b.idxMu.
+func (b *bullServer) updateIndexLocked(pageName string, newTargets []string) {
+	old := b.idx.Load()
+	// Shallow clone: the []string value slices are shared with old.links.
+	// This is safe because we never mutate existing slices — we only
+	// replace entire map entries.
+	newLinks := make(map[string][]string, len(old.links)+1)
+	maps.Copy(newLinks, old.links)
+
+	oldTargets := old.links[pageName] // already sorted+deduped
+	newLinks[pageName] = newTargets
+
+	// Surgically patch backlinks: diff old vs new targets (both sorted),
+	// then update only the affected backlink entries.
+	added, removed := diffSorted(oldTargets, newTargets)
+	// Shallow clone: the []string value slices are shared with old.backlinks.
+	// This is safe because removeFromSorted/insertIntoSorted never mutate
+	// slices in place — they either return the original slice unchanged
+	// or allocate a new one.
+	newBacklinks := maps.Clone(old.backlinks)
+	patchBacklinks(newBacklinks, pageName, added, removed)
+
+	b.idx.Store(&idx{
+		dirs:      old.dirs,
+		pages:     uint64(len(newLinks)),
+		links:     newLinks,
+		backlinks: newBacklinks,
+	})
+}
+
+func patchBacklinks(backlinks map[string][]string, pageName string, added, removed []string) {
+	for _, target := range removed {
+		if bl := backlinks[target]; len(bl) > 0 {
+			patched := removeFromSorted(bl, pageName)
+			if len(patched) == 0 {
+				delete(backlinks, target)
+			} else {
+				backlinks[target] = patched
+			}
+		}
+	}
+	for _, target := range added {
+		backlinks[target] = insertIntoSorted(backlinks[target], pageName)
+	}
+}
+
+// diffSorted returns elements present in b but not a (added),
+// and elements present in a but not b (removed).
+// Both inputs must be sorted and deduplicated.
+func diffSorted(a, b []string) (added, removed []string) {
+	i, j := 0, 0
+	for i < len(a) && j < len(b) {
+		switch {
+		case a[i] < b[j]:
+			removed = append(removed, a[i])
+			i++
+		case a[i] > b[j]:
+			added = append(added, b[j])
+			j++
+		default:
+			i++
+			j++
+		}
+	}
+	for ; i < len(a); i++ {
+		removed = append(removed, a[i])
+	}
+	for ; j < len(b); j++ {
+		added = append(added, b[j])
+	}
+	return added, removed
+}
+
+// removeFromSorted returns a new slice with val removed from the sorted slice.
+// It MUST always return a new slice (or the original unchanged) — never mutate
+// s in place. Callers rely on COW safety: the previous idx value (and its
+// backlink slices) is still visible to concurrent readers via atomic.Load.
+func removeFromSorted(s []string, val string) []string {
+	i, found := slices.BinarySearch(s, val)
+	if !found {
+		return s
+	}
+	result := make([]string, len(s)-1)
+	copy(result, s[:i])
+	copy(result[i:], s[i+1:])
+	return result
+}
+
+// insertIntoSorted returns a new slice with val inserted into the sorted slice.
+// It MUST always return a new slice (or the original unchanged) — never mutate
+// s in place. Callers rely on COW safety: the previous idx value (and its
+// backlink slices) is still visible to concurrent readers via atomic.Load.
+func insertIntoSorted(s []string, val string) []string {
+	i, found := slices.BinarySearch(s, val)
+	if found {
+		return s // already present
+	}
+	result := make([]string, len(s)+1)
+	copy(result, s[:i])
+	result[i] = val
+	copy(result[i+1:], s[i:])
+	return result
 }

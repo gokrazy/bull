@@ -64,8 +64,8 @@ something profound
 		content:         content,
 		contentDir:      tmp,
 		contentSettings: cs,
-		idx:             &idx{},
 	}
+	bull.idx.Store(&idx{})
 	if err := bull.init(); err != nil {
 		t.Fatal(err)
 	}
@@ -198,8 +198,8 @@ func TestLinkify(t *testing.T) {
 		content:         content,
 		contentDir:      tmp,
 		contentSettings: cs,
-		idx:             &idx{},
 	}
+	bull.idx.Store(&idx{})
 	if err := bull.init(); err != nil {
 		t.Fatal(err)
 	}

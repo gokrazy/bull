@@ -98,12 +98,15 @@ func (b *bullServer) handleWatch(w http.ResponseWriter, r *http.Request) error {
 	poller := time.NewTicker(1 * time.Second)
 	defer poller.Stop()
 	for {
+		contentChanged := b.contentChangedCh()
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 
 		case <-poller.C:
 		case <-notify:
+		case <-contentChanged:
+			// Backlinks or other content changed; re-check the page.
 		}
 
 		b, err := b.readFirst(possibilities)

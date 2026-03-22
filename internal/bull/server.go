@@ -11,6 +11,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"sync/atomic"
 	texttemplate "text/template"
 
 	"github.com/gokrazy/bull"
@@ -21,13 +22,32 @@ type bullServer struct {
 	customization *Customization
 	// content is a directory tree.
 	content         *os.Root
-	contentDir      string // only for <title>
+	contentDir      string // for <title> and fswatch inotify watches
 	contentSettings bull.ContentSettings
 	static          *os.Root // static assets (for development)
-	idx             *idx
+	idx             atomic.Pointer[idx]
+	idxMu           sync.Mutex // serializes index updates
 	editor          string
 	root            string
 	watch           string
+
+	// contentChanged is closed and replaced whenever content changes.
+	// Listeners select on it to detect changes (broadcast pattern).
+	contentChangedMu sync.Mutex
+	contentChanged   chan struct{}
+}
+
+func (b *bullServer) notifyContentChanged() {
+	b.contentChangedMu.Lock()
+	defer b.contentChangedMu.Unlock()
+	close(b.contentChanged)
+	b.contentChanged = make(chan struct{})
+}
+
+func (b *bullServer) contentChangedCh() <-chan struct{} {
+	b.contentChangedMu.Lock()
+	defer b.contentChangedMu.Unlock()
+	return b.contentChanged
 }
 
 func (b *bullServer) URLBullPrefix() string {

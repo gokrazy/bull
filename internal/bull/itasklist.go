@@ -11,6 +11,9 @@ import (
 )
 
 func (b *bullServer) itasklistAPI(w http.ResponseWriter, r *http.Request) error {
+	if b.editor == "" {
+		return httpError(http.StatusForbidden, fmt.Errorf("running in read-only mode (-editor= flag)"))
+	}
 	src := r.PathValue("page")
 	lineStr := r.FormValue("checkbox-line")
 	if lineStr == "" {

@@ -85,6 +85,7 @@ func mv(args []string) error {
 		content:         content,
 		contentDir:      *contentDir,
 		contentSettings: cs,
+		contentChanged:  make(chan struct{}),
 	}
 	if err := bull.init(); err != nil {
 		return err
@@ -96,7 +97,7 @@ func mv(args []string) error {
 	if err != nil {
 		return err
 	}
-	bull.idx = idx
+	bull.idx.Store(idx)
 	log.Printf("discovered in %.2fs: directories: %d, pages: %d, links: %d", time.Since(start).Seconds(), idx.dirs, idx.pages, len(idx.backlinks))
 
 	src := fset.Arg(0)

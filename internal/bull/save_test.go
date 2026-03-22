@@ -35,9 +35,10 @@ func TestSave(t *testing.T) {
 		content:         content,
 		contentDir:      tmp,
 		contentSettings: cs,
-		idx:             &idx{},
 		editor:          "textarea",
+		contentChanged:  make(chan struct{}),
 	}
+	bull.idx.Store(&idx{})
 	if err := bull.init(); err != nil {
 		t.Fatal(err)
 	}

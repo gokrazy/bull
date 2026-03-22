@@ -2,6 +2,7 @@ package bull
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -54,6 +55,20 @@ func (b *bullServer) save(w http.ResponseWriter, r *http.Request) error {
 	if err := pf.CloseAtomicallyReplace(); err != nil {
 		return err
 	}
+
+	// Update backlink index
+	pg, err := b.read(firstFn)
+	if err != nil {
+		log.Printf("index update after save: read: %v", err)
+	} else {
+		targets, err := b.linkTargets(pg)
+		if err != nil {
+			log.Printf("index update after save: linkTargets: %v", err)
+		} else {
+			b.updateIndex(pg.PageName, targets)
+		}
+	}
+	b.notifyContentChanged()
 
 	http.Redirect(w, r, b.root+pageName, http.StatusFound)
 	return nil

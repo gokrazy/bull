@@ -2,6 +2,7 @@ package bull
 
 import (
 	"bytes"
+	"context"
 	"flag"
 	"io/fs"
 	"log"
@@ -140,6 +141,7 @@ func (c *Customization) serve(args []string) error {
 		editor:          *editor,
 		root:            *root,
 		watch:           *watch,
+		contentChanged:  make(chan struct{}),
 	}
 	if err := bull.init(); err != nil {
 		return err
@@ -155,8 +157,14 @@ func (c *Customization) serve(args []string) error {
 	if err != nil {
 		return err
 	}
-	bull.idx = idx
+	bull.idx.Store(idx)
 	log.Printf("discovered in %.2fs: directories: %d, pages: %d, links: %d", time.Since(start).Seconds(), idx.dirs, idx.pages, len(idx.backlinks))
+
+	// context.Background: the watcher runs for the lifetime of the process.
+	// No graceful shutdown is needed; w.Close() happens on process exit.
+	if err := bull.watchContent(context.Background()); err != nil {
+		log.Printf("fswatch: %v (backlinks will not update on external edits)", err)
+	}
 
 	urlBullPrefix := bull.URLBullPrefix()
 

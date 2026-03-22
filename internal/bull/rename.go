@@ -7,10 +7,12 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 func (b *bullServer) rename(w http.ResponseWriter, r *http.Request) error {
+	if b.editor == "" {
+		return httpError(http.StatusForbidden, fmt.Errorf("running in read-only mode (-editor= flag)"))
+	}
 	possibilities := filesFromURL(r)
 	pg, err := b.readFirst(possibilities)
 	if err != nil {
@@ -32,17 +34,21 @@ func (b *bullServer) rename(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (b *bullServer) renameAPI(w http.ResponseWriter, r *http.Request) error {
+	if b.editor == "" {
+		return httpError(http.StatusForbidden, fmt.Errorf("running in read-only mode (-editor= flag)"))
+	}
 	src := r.PathValue("page")
 	dest := r.FormValue("newname")
 	log.Printf("renaming page=%q to newname=%q", src, dest)
 
-	start := time.Now()
-	log.Printf("indexing all pages (markdown files) in %s", b.content.Name())
-	idx, err := b.index()
-	if err != nil {
-		return err
+	if !filepath.IsLocal(dest) {
+		return httpError(http.StatusBadRequest, fmt.Errorf("invalid destination path: %q", dest))
 	}
-	log.Printf("discovered in %.2fs: directories: %d, pages: %d, links: %d", time.Since(start).Seconds(), idx.dirs, idx.pages, len(idx.backlinks))
+	if !filepath.IsLocal(src) {
+		return httpError(http.StatusBadRequest, fmt.Errorf("invalid source path: %q", src))
+	}
+
+	currentIdx := b.idx.Load()
 
 	possibilities := page2files(src)
 	if isMarkdown(src) {
@@ -58,6 +64,12 @@ func (b *bullServer) renameAPI(w http.ResponseWriter, r *http.Request) error {
 		dest = page2desired(dest)
 	}
 
+	// Note: there is a TOCTOU race between this check and os.Rename below.
+	if destPg, err := b.readFirst(page2files(destPage)); err == nil {
+		return httpError(http.StatusConflict,
+			fmt.Errorf("destination page %q already exists (see /%s)", destPage, destPg.URLPath()))
+	}
+
 	log.Printf("mv %q %q", pg.FileName, dest)
 
 	oldpath := filepath.Join(b.contentDir, pg.FileName)
@@ -69,8 +81,9 @@ func (b *bullServer) renameAPI(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	log.Printf("# backlinks: %d", len(idx.backlinks[pg.PageName]))
-	for _, linker := range idx.backlinks[pg.PageName] {
+	linkers := currentIdx.backlinks[pg.PageName]
+	log.Printf("# backlinks: %d", len(linkers))
+	for _, linker := range linkers {
 		linkerpg, err := b.readFirst(page2files(linker))
 		if err != nil {
 			log.Printf("  not found: %v", err)
@@ -84,11 +97,53 @@ func (b *bullServer) renameAPI(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	destPg, err := b.read(dest)
+	// Read the renamed page and compute targets before modifying the index,
+	// so that a read failure does not leave the index with a hole.
+	newPg, err := b.read(dest)
 	if err != nil {
 		return err
 	}
-	http.Redirect(w, r, b.root+destPg.URLPath(), http.StatusFound)
+	newTargets, err := b.linkTargets(newPg)
+	if err != nil {
+		return fmt.Errorf("index update after rename: %v", err)
+	}
+
+	// Pre-read all linker pages outside the lock to avoid holding idxMu
+	// during disk I/O.
+	type linkerUpdate struct {
+		pageName string
+		targets  []string
+	}
+	var linkerUpdates []linkerUpdate
+	for _, linker := range linkers {
+		linkerpg, err := b.readFirst(page2files(linker))
+		if err != nil {
+			log.Printf("rename: re-index linker %s: %v", linker, err)
+			continue
+		}
+		targets, err := b.linkTargets(linkerpg)
+		if err != nil {
+			log.Printf("rename: linkTargets for linker %s: %v", linker, err)
+			continue
+		}
+		linkerUpdates = append(linkerUpdates, linkerUpdate{linkerpg.PageName, targets})
+	}
+
+	// Update index atomically: single clone-patch-store cycle
+	// to prevent fswatch from interleaving partial state.
+	updates := make([]indexUpdate, 0, 1+len(linkerUpdates))
+	updates = append(updates, indexUpdate{destPage, newTargets})
+	for _, lu := range linkerUpdates {
+		updates = append(updates, indexUpdate(lu))
+	}
+	b.idxMu.Lock()
+	b.applyIndexBatchLocked([]string{pg.PageName}, updates)
+	b.idxMu.Unlock()
+	// Notify outside idxMu to maintain consistent lock ordering
+	// (idxMu is never held when acquiring contentChangedMu).
+	b.notifyContentChanged()
+
+	http.Redirect(w, r, b.root+newPg.URLPath(), http.StatusFound)
 
 	return nil
 }
