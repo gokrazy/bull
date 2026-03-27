@@ -88,7 +88,7 @@ func (c *Customization) Runbull() error {
 	if info, ok := debug.ReadBuildInfo(); ok {
 		mainVersion = info.Main.Version
 	}
-	fmt.Printf("github.com/gokrazy/bull %s\n", mainVersion)
+	fmt.Fprintf(os.Stderr, "github.com/gokrazy/bull %s\n", mainVersion)
 
 	flag.Usage = func() {
 		os.Stderr.Write([]byte(`
@@ -103,6 +103,7 @@ If no verb is specified, bull will default to 'serve'.
 Verbs:
   serve  - serve markdown pages
   mv     - rename markdown page and update links
+  graph  - show link graph, orphans, and broken links
 
 Examples:
   % bull                                # serve the current directory
@@ -137,6 +138,8 @@ Global command-line flags:
 		return c.serve(args)
 	case "mv":
 		return mv(args)
+	case "graph":
+		return graph(args)
 	}
 	fmt.Fprintf(os.Stderr, "unknown verb %q\n", verb)
 	flag.Usage()
