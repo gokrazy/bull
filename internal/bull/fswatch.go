@@ -111,7 +111,7 @@ func (b *bullServer) watchContentLoop(ctx context.Context, w *fsnotify.Watcher) 
 }
 
 // handleContentEvent processes a single fsnotify event.
-// It returns true if the index was updated (caller should notify).
+// It returns true if a content file was affected (caller should notify).
 func (b *bullServer) handleContentEvent(w *fsnotify.Watcher, event fsnotify.Event) bool {
 	name := event.Name
 
@@ -162,10 +162,9 @@ func (b *bullServer) handleContentEvent(w *fsnotify.Watcher, event fsnotify.Even
 	case event.Has(fsnotify.Remove) || event.Has(fsnotify.Rename):
 		// Reading idx outside the lock is a benign TOCTOU: worst case we call
 		// removeFromIndex redundantly (it rechecks under the lock).
-		if old := b.idx.Load().links[pageName]; old == nil {
-			return false // already absent from the index
+		if old := b.idx.Load().links[pageName]; old != nil {
+			b.removeFromIndex(pageName)
 		}
-		b.removeFromIndex(pageName)
 		return true
 
 	case event.Has(fsnotify.Create) || event.Has(fsnotify.Write):
@@ -181,10 +180,9 @@ func (b *bullServer) handleContentEvent(w *fsnotify.Watcher, event fsnotify.Even
 		}
 		// Reading idx outside the lock is a benign TOCTOU: worst case we call
 		// updateIndex redundantly (it rechecks and stores an identical snapshot).
-		if slices.Equal(b.idx.Load().links[pageName], targets) {
-			return false // index already up to date (e.g. save already applied)
+		if !slices.Equal(b.idx.Load().links[pageName], targets) {
+			b.updateIndex(pageName, targets)
 		}
-		b.updateIndex(pageName, targets)
 		return true
 	}
 	return false

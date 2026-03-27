@@ -134,8 +134,15 @@ func TestHandleContentEventDedup(t *testing.T) {
 		Name: filepath.Join(b.contentDir, "alpha.md"),
 		Op:   fsnotify.Write,
 	})
-	if updated {
-		t.Fatal("unchanged targets should not trigger index update")
+	// handleContentEvent returns true for any markdown file change
+	// (so watchers like the browse page can reload), but the link
+	// index itself should not be updated when targets are unchanged.
+	if !updated {
+		t.Fatal("markdown write should report content changed")
+	}
+	cur := b.idx.Load()
+	if diff := cmp.Diff(idx.links["alpha"], cur.links["alpha"]); diff != "" {
+		t.Fatalf("index should not change for unchanged targets (-want +got):\n%s", diff)
 	}
 }
 

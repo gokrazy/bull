@@ -65,6 +65,22 @@ func maybeNotify(ctx context.Context, notify chan<- struct{}, fileName string) {
 	}
 }
 
+func (b *bullServer) handleWatchBrowse(w http.ResponseWriter, flusher http.Flusher, ctx context.Context) error {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	initEventStream(w)
+	for {
+		contentChanged := b.contentChangedCh()
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-contentChanged:
+			w.Write([]byte("data: {\"changed\":true}\n\n"))
+			flusher.Flush()
+			return nil // client reloads and reconnects
+		}
+	}
+}
+
 func (b *bullServer) handleWatch(w http.ResponseWriter, r *http.Request) error {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
@@ -72,6 +88,11 @@ func (b *bullServer) handleWatch(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	ctx := r.Context()
+
+	pageName := pageFromURL(r)
+	if pageName == bullPrefix+"browse" {
+		return b.handleWatchBrowse(w, flusher, ctx)
+	}
 
 	possibilities := filesFromURL(r)
 	lastb, err := b.readFirst(possibilities)
