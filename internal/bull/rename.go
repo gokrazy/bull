@@ -48,6 +48,9 @@ func (b *bullServer) renameAPI(w http.ResponseWriter, r *http.Request) error {
 		return httpError(http.StatusBadRequest, fmt.Errorf("invalid source path: %q", src))
 	}
 
+	// Wait for initial indexing to complete: rename needs the backlink
+	// index to update all pages that link to the source page.
+	<-b.idxReady
 	currentIdx := b.idx.Load()
 
 	possibilities := page2files(src)

@@ -26,7 +26,8 @@ type bullServer struct {
 	contentSettings bull.ContentSettings
 	static          *os.Root // static assets (for development)
 	idx             atomic.Pointer[idx]
-	idxMu           sync.Mutex // serializes index updates
+	idxMu           sync.Mutex    // serializes index updates
+	idxReady        chan struct{} // closed when initial indexing completes
 	editor          string
 	root            string
 	watch           string

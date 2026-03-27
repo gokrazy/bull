@@ -59,11 +59,14 @@ something profound
 	if err != nil {
 		t.Fatal(err)
 	}
+	idxReady := make(chan struct{})
+	close(idxReady)
 	bull := &bullServer{
 		root:            "/",
 		content:         content,
 		contentDir:      tmp,
 		contentSettings: cs,
+		idxReady:        idxReady,
 	}
 	bull.idx.Store(&idx{})
 	if err := bull.init(); err != nil {
@@ -193,11 +196,14 @@ func TestLinkify(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	idxReady := make(chan struct{})
+	close(idxReady)
 	bull := &bullServer{
 		root:            "/",
 		content:         content,
 		contentDir:      tmp,
 		contentSettings: cs,
+		idxReady:        idxReady,
 	}
 	bull.idx.Store(&idx{})
 	if err := bull.init(); err != nil {

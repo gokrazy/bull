@@ -29,12 +29,15 @@ func newTestBull(t *testing.T, files map[string]string) *bullServer {
 	if err != nil {
 		t.Fatal(err)
 	}
+	idxReady := make(chan struct{})
+	close(idxReady)
 	b := &bullServer{
 		root:            "/",
 		content:         content,
 		contentDir:      tmp,
 		contentSettings: cs,
 		contentChanged:  make(chan struct{}),
+		idxReady:        idxReady,
 	}
 	b.idx.Store(&idx{links: make(map[string][]string)})
 	if err := b.init(); err != nil {

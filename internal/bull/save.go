@@ -57,6 +57,7 @@ func (b *bullServer) save(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// Update backlink index
+	<-b.idxReady
 	pg, err := b.read(firstFn)
 	if err != nil {
 		log.Printf("index update after save: read: %v", err)

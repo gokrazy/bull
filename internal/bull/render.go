@@ -204,6 +204,7 @@ func (b *bullServer) renderWithBacklinks(w http.ResponseWriter, r *http.Request,
 	// Extend the content with backlinks (wb).
 	wb := []byte(pg.Content)
 
+	<-b.idxReady
 	if linkers := b.idx.Load().backlinks[pg.PageName]; len(linkers) > 0 {
 		wb = append(wb, []byte(`
 # backlinks

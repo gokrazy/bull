@@ -30,6 +30,8 @@ func TestSave(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	idxReady := make(chan struct{})
+	close(idxReady)
 	bull := &bullServer{
 		root:            "/",
 		content:         content,
@@ -37,6 +39,7 @@ func TestSave(t *testing.T) {
 		contentSettings: cs,
 		editor:          "textarea",
 		contentChanged:  make(chan struct{}),
+		idxReady:        idxReady,
 	}
 	bull.idx.Store(&idx{})
 	if err := bull.init(); err != nil {

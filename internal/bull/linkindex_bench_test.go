@@ -25,12 +25,15 @@ func TestIndexPerformance(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	idxReady := make(chan struct{})
+	close(idxReady)
 	b := &bullServer{
 		root:            "/",
 		content:         content,
 		contentDir:      *gardenDir,
 		contentSettings: cs,
 		contentChanged:  make(chan struct{}),
+		idxReady:        idxReady,
 	}
 	b.idx.Store(&idx{links: make(map[string][]string)})
 	if err := b.init(); err != nil {
@@ -120,12 +123,15 @@ func BenchmarkUpdateIndex(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
+	idxReady := make(chan struct{})
+	close(idxReady)
 	bull := &bullServer{
 		root:            "/",
 		content:         content,
 		contentDir:      *gardenDir,
 		contentSettings: cs,
 		contentChanged:  make(chan struct{}),
+		idxReady:        idxReady,
 	}
 	bull.idx.Store(&idx{links: make(map[string][]string)})
 	if err := bull.init(); err != nil {
@@ -185,12 +191,15 @@ func BenchmarkInvertLinks(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
+	idxReady := make(chan struct{})
+	close(idxReady)
 	bull := &bullServer{
 		root:            "/",
 		content:         content,
 		contentDir:      *gardenDir,
 		contentSettings: cs,
 		contentChanged:  make(chan struct{}),
+		idxReady:        idxReady,
 	}
 	bull.idx.Store(&idx{links: make(map[string][]string)})
 	if err := bull.init(); err != nil {

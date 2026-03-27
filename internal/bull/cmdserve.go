@@ -142,29 +142,38 @@ func (c *Customization) serve(args []string) error {
 		root:            *root,
 		watch:           *watch,
 		contentChanged:  make(chan struct{}),
+		idxReady:        make(chan struct{}),
 	}
 	if err := bull.init(); err != nil {
 		return err
 	}
 
-	// index for backlinks
-	// TODO: index in the background, print how long it took when done
-	// TODO: deal with permission denied errors.
-	// add a test that ensures bull starts up even when files cannot be read
-	start := time.Now()
-	log.Printf("indexing all pages (markdown files) in %s (for backlinks)", content.Name())
-	idx, err := bull.index()
-	if err != nil {
-		return err
-	}
-	bull.idx.Store(idx)
-	log.Printf("discovered in %.2fs: directories: %d, pages: %d, links: %d", time.Since(start).Seconds(), idx.dirs, idx.pages, len(idx.backlinks))
+	// Index for backlinks in the background so that bull starts accepting
+	// connections immediately. Handlers that need the index wait on
+	// idxReady before proceeding.
+	go func() {
+		start := time.Now()
+		log.Printf("indexing all pages (markdown files) in %s (for backlinks)", content.Name())
+		result, err := bull.index()
+		if err != nil {
+			log.Printf("indexing failed: %v (backlinks will be unavailable)", err)
+			// Store an empty index so readers don't see a nil pointer.
+			bull.idx.Store(&idx{
+				links:     make(map[string][]string),
+				backlinks: make(map[string][]string),
+			})
+		} else {
+			bull.idx.Store(result)
+			log.Printf("discovered in %.2fs: directories: %d, pages: %d, links: %d", time.Since(start).Seconds(), result.dirs, result.pages, len(result.backlinks))
+		}
+		close(bull.idxReady)
 
-	// context.Background: the watcher runs for the lifetime of the process.
-	// No graceful shutdown is needed; w.Close() happens on process exit.
-	if err := bull.watchContent(context.Background()); err != nil {
-		log.Printf("fswatch: %v (backlinks will not update on external edits)", err)
-	}
+		// context.Background: the watcher runs for the lifetime of the process.
+		// No graceful shutdown is needed; w.Close() happens on process exit.
+		if err := bull.watchContent(context.Background()); err != nil {
+			log.Printf("fswatch: %v (backlinks will not update on external edits)", err)
+		}
+	}()
 
 	urlBullPrefix := bull.URLBullPrefix()
 
