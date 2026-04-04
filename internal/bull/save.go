@@ -44,7 +44,7 @@ func (b *bullServer) save(w http.ResponseWriter, r *http.Request) error {
 	if err := mkdirAll(b.content, filepath.Dir(firstFn), 0755); err != nil {
 		return err
 	}
-	pf, err := renameio.NewPendingFile(firstFn, renameio.WithRoot(b.content))
+	pf, err := renameio.NewPendingFile(firstFn, renameio.WithRoot(b.content), renameio.WithPermissions(0666))
 	if err != nil {
 		return err
 	}
