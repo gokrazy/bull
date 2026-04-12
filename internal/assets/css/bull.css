@@ -202,6 +202,11 @@ main th {
     padding: .5rem .4rem;
 }
 
+main th code {
+    background-color: rgba(255, 255, 255, 0.3);
+    color: inherit;
+}
+
 main img {
     max-width: 100%;
 }
