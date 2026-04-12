@@ -41,6 +41,31 @@ for that:
     nix develop
 	./regenerate.sh
 
+## build tags
+
+By default, bull embeds JavaScript bundles for the CodeMirror editor and Mermaid
+diagram renderer. You can strip either with [Go build
+tags](https://pkg.go.dev/cmd/go#hdr-Build_constraints):
+
+    CGO_ENABLED=0 go install -tags nocodemirror ./cmd/bull
+    CGO_ENABLED=0 go install -tags nomermaid ./cmd/bull
+    CGO_ENABLED=0 go install -tags nocodemirror,nomermaid ./cmd/bull
+
+| build tag      | default behavior (without tag)                                                           | with tag                                     |
+|----------------|------------------------------------------------------------------------------------------|----------------------------------------------|
+| `nocodemirror` | [CodeMirror](https://codemirror.net/) editor embedded                                    | falls back to plain `<textarea>`             |
+| `nomermaid`    | [Mermaid diagrams](https://en.wikipedia.org/wiki/Mermaid_(software)) rendered in-browser | `` ```mermaid `` blocks render as plain code |
+
+Here is how the size of the `bull` binary changes (built with Go 1.26 and
+`CGO_ENABLED=0`):
+
+| build tags                     | binary size                      |
+|--------------------------------|----------------------------------|
+| `-tags nocodemirror,nomermaid` | 15.0 MB                          |
+| `-tags nomermaid`              | 17.9 MB (+2.9 MB for CodeMirror) |
+| `-tags nocodemirror`           | 15.5 MB (+0.5 MB for Mermaid)    |
+| *(default, both enabled)*      | 18.4 MB (+3.4 MB total)          |
+
 ## key differentiators
 
 * made for external editing (e.g. with Emacs or your favorite editor)
@@ -66,7 +91,7 @@ bull uses the yuin/goldmark markdown renderer, specifically:
 
 * live reload: when a page changes, the browser reloads
 
-* opt-in editor: CodeMirror (or textarea when built with nocodemirror)
+* opt-in editor: CodeMirror (see [build tags](#build-tags) for how to disable)
 
 * special pages:
   * /_bull/mostrecent or /_bull/browse directory browser in general
@@ -102,3 +127,44 @@ bull uses the yuin/goldmark markdown renderer, specifically:
   * hugo’s code base is pretty large (`wc -l` reports 190'000 lines)
   * the point is to have a minimalist, understandable markdown viewer without
     opinions about file names
+
+## license of bull and dependencies
+
+bull itself is licensed under the [BSD Zero Clause License](LICENSE) (0BSD).
+
+Depending on which build tags you use, the binary may include dependencies under
+different licenses. All licenses are [permissive software
+licenses](https://en.wikipedia.org/wiki/Permissive_software_license) or
+[public-domain-equivalent
+licenses](https://en.wikipedia.org/wiki/Public-domain-equivalent_license).
+
+* **bull** (Go code):
+  * bull itself is licensed under the [BSD Zero Clause License](LICENSE) (0BSD)
+  * full text in [LICENSE](LICENSE)
+* **Go dependencies:**
+  * MIT: goldmark
+    ([LICENSE](https://github.com/yuin/goldmark/blob/master/LICENSE)),
+    BurntSushi/toml
+    ([COPYING](https://github.com/BurntSushi/toml/blob/master/COPYING))
+  * BSD-3-Clause: goldmark-wikilink
+    ([LICENSE](https://github.com/abhinav/goldmark-wikilink/blob/main/LICENSE)),
+    golang.org/x/image
+    ([LICENSE](https://cs.opensource.google/go/x/image/+/master:LICENSE)),
+    golang.org/x/sync, fsnotify
+  * Apache-2.0: google/renameio
+    ([LICENSE](https://github.com/google/renameio/blob/master/LICENSE))
+* **CodeMirror bundle** (omitted with `-tags nocodemirror`):
+  * MIT: codemirror, all @codemirror/\* and @lezer/\* packages, crelt,
+    style-mod, w3c-keyname
+  * full text in [LICENSE.codemirror](LICENSE.codemirror)
+* **Mermaid bundle** (omitted with `-tags nomermaid`):
+  * MIT: mermaid, katex, dagre-d3-es, cytoscape, marked, roughjs, langium, and
+    others
+  * ISC: d3 ([LICENSE](https://github.com/d3/d3/blob/main/LICENSE)) and all
+    d3-\* packages, delaunator, internmap
+  * Apache-2.0: chevrotain
+    ([LICENSE](https://github.com/Chevrotain/chevrotain/blob/master/LICENSE.txt))
+    and @chevrotain/\*, DOMPurify, d3-scale-chromatic
+  * Unlicense: robust-predicates
+    ([LICENSE](https://github.com/mourner/robust-predicates/blob/main/LICENSE))
+  * full text in [LICENSE.mermaid](LICENSE.mermaid)
