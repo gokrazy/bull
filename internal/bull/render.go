@@ -17,6 +17,7 @@ import (
 	"github.com/gokrazy/bull/internal/hashtag"
 	"github.com/gokrazy/bull/internal/itasklist"
 	"github.com/gokrazy/bull/internal/linkify"
+	"github.com/gokrazy/bull/internal/mermaid"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
@@ -281,6 +282,7 @@ func (b *bullServer) renderMarkdown(w http.ResponseWriter, r *http.Request, pg *
 		Content       template.HTML
 		ContentHash   string
 		StaticHash    func(string) string
+		MermaidHash   string
 		Watch         string
 	}{
 		URLPrefix:     b.root,
@@ -292,6 +294,7 @@ func (b *bullServer) renderMarkdown(w http.ResponseWriter, r *http.Request, pg *
 		Content:       template.HTML(html),
 		ContentHash:   pg.ContentHash(),
 		StaticHash:    b.staticHash,
+		MermaidHash:   hashSum(mermaid.BullMermaid),
 		Watch:         b.watch,
 	})
 }

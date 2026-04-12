@@ -15,6 +15,7 @@ import (
 
 	"github.com/gokrazy/bull/internal/assets"
 	"github.com/gokrazy/bull/internal/codemirror"
+	"github.com/gokrazy/bull/internal/mermaid"
 	"golang.org/x/image/font/gofont/gobold"
 	"golang.org/x/image/font/gofont/gomono"
 	"golang.org/x/image/font/gofont/goregular"
@@ -209,6 +210,12 @@ func (c *Customization) serve(args []string) error {
 			func(w http.ResponseWriter, r *http.Request) {
 				cache(w)
 				http.ServeContent(w, r, basename, startupTime, bytes.NewReader(codemirror.BullCodemirror))
+			})
+		basename = "bull-mermaid.bundle.js"
+		http.HandleFunc(urlBullPrefix+"js/"+basename,
+			func(w http.ResponseWriter, r *http.Request) {
+				cache(w)
+				http.ServeContent(w, r, basename, startupTime, bytes.NewReader(mermaid.BullMermaid))
 			})
 		var assetsFS fs.FS = assets.FS
 		if static != nil {

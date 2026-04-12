@@ -87,6 +87,15 @@
   </script>
 {{ end }}
 
+  {{ if .MermaidHash }}
+  <script>
+  if (document.querySelector('pre > code.language-mermaid')) {
+    var s = document.createElement('script');
+    s.src = '{{ .URLBullPrefix }}js/bull-mermaid.bundle.js?cachebust={{ .MermaidHash }}';
+    document.head.appendChild(s);
+  }
+  </script>
+  {{ end }}
   <script src="{{ .URLBullPrefix }}js/nav.js?cachebust={{ call .StaticHash "js/nav.js" }}" async></script>
   {{ if not .ReadOnly }}
   <script src="{{ .URLBullPrefix }}js/itasklist.js?cachebust={{ call .StaticHash "js/itasklist.js" }}" async></script>
