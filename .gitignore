@@ -1,2 +1,3 @@
 /third_party/codemirror/node_modules/
+/third_party/mermaid/node_modules/
 run-dev.sh
