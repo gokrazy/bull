@@ -135,26 +135,15 @@ func (br *browse) browseDirLink(dir string) string {
 	}).String()
 }
 
-func browseTableLine(name string, modTime time.Time, now time.Time) string {
-	ts := modTime.Format("2006-01-02 15:04:05")
-	ts += " • " + modTime.Format("Mon")
-	if ago := now.Sub(modTime); ago >= 0 && ago < 24*time.Hour {
-		hours := int(ago.Hours())
-		minutes := int(ago.Minutes()) % 60
-		seconds := int(ago.Seconds()) % 60
-		if hours > 0 {
-			ts += fmt.Sprintf(" • %dh %dm ago", hours, minutes)
-		} else if minutes > 0 {
-			ts += fmt.Sprintf(" • %dm %ds ago", minutes, seconds)
-		} else {
-			ts += fmt.Sprintf(" • %ds ago", seconds)
-		}
-	}
+func browseTableLine(name string, modTime time.Time) string {
+	ts := fmt.Sprintf(`<time datetime="%s">%s • %s</time>`,
+		modTime.Format(time.RFC3339),
+		modTime.Format("2006-01-02 15:04:05"),
+		modTime.Format("Mon"))
 	return fmt.Sprintf("| %s | %s |\n", name, ts)
 }
 
 func (br *browse) browseTable() []string {
-	now := time.Now()
 	dirs := br.dirs()
 	lines := make([]string, 0, len(br.pages))
 	for _, pg := range br.pages {
@@ -163,7 +152,7 @@ func (br *browse) browseTable() []string {
 				// This is the first time we encounter a page within this
 				// directory, so produce a table line for the directory.
 				name := fmt.Sprintf("[%s/](%s)", dir, br.browseDirLink(dir))
-				lines = append(lines, browseTableLine(name, latest, now))
+				lines = append(lines, browseTableLine(name, latest))
 				dirs[dir] = time.Time{} // still present, but printed
 			}
 			if br.directories == "expand" {
@@ -173,12 +162,12 @@ func (br *browse) browseTable() []string {
 			}
 		}
 
-		lines = append(lines, browseTableLine("[["+pg.PageName+"]]", pg.ModTime, now))
+		lines = append(lines, browseTableLine("[["+pg.PageName+"]]", pg.ModTime))
 	}
 	return lines
 }
 
-func (b *bullServer) browse(w http.ResponseWriter, r *http.Request) error {
+func (b *bullServer) browseContent(dir, sortby, sortorder, directories string) ([]byte, error) {
 	// walk the entire content directory
 	i := newIndexer(b.content)
 	i.readModTime = true // required for sorting by most recent
@@ -193,21 +182,22 @@ func (b *bullServer) browse(w http.ResponseWriter, r *http.Request) error {
 		}
 	})
 	if err := i.walk(); err != nil {
-		return err
+		return nil, err
 	}
 	readg.Wait()
 
+	urlPrefix := b.URLBullPrefix()
 	br := browse{
-		urlPrefix:   b.URLBullPrefix(),
-		dir:         r.FormValue("dir"),
-		sortby:      r.FormValue("sort"),
-		sortorder:   r.FormValue("sortorder"),
-		directories: r.FormValue("directories"),
+		urlPrefix:   urlPrefix,
+		dir:         dir,
+		sortby:      sortby,
+		sortorder:   sortorder,
+		directories: directories,
 		pages:       pages,
 	}
 	br.maybeFilterFilePrefix()
 	if err := br.sortPages(); err != nil {
-		return err
+		return nil, err
 	}
 
 	var buf bytes.Buffer
@@ -217,29 +207,47 @@ func (b *bullServer) browse(w http.ResponseWriter, r *http.Request) error {
 		fmt.Fprintf(&buf, "# directory browser\n")
 	}
 
+	escDir := url.QueryEscape(br.dir)
+	escSort := url.QueryEscape(br.sortby)
+	escOrder := url.QueryEscape(br.sortorder)
+
 	fmt.Fprintf(&buf, "subdirectories: ")
 	if br.directories == "expand" {
-		fmt.Fprintf(&buf, "[collapse](%sbrowse?dir=%s&sort=%s&sortorder=%s&directories=) • **expand**\n", br.urlPrefix, url.QueryEscape(br.dir), br.sortby, br.sortorder)
+		fmt.Fprintf(&buf, "[collapse](%sbrowse?dir=%s&sort=%s&sortorder=%s&directories=) • **expand**\n", urlPrefix, escDir, escSort, escOrder)
 	} else {
-		fmt.Fprintf(&buf, "**collapse** • [expand](%sbrowse?dir=%s&sort=%s&sortorder=%s&directories=expand)\n", br.urlPrefix, url.QueryEscape(br.dir), br.sortby, br.sortorder)
+		fmt.Fprintf(&buf, "**collapse** • [expand](%sbrowse?dir=%s&sort=%s&sortorder=%s&directories=expand)\n", urlPrefix, escDir, escSort, escOrder)
 	}
 
-	fmt.Fprintf(&buf, "| page name [↑](%[1]sbrowse?dir=%[2]s&sort=pagename) [↓](%[1]sbrowse?dir=%[2]s&sort=pagename&sortorder=desc) | last modified [↑](%[1]sbrowse?dir=%[2]s&sort=modtime) [↓](%[1]sbrowse?dir=%[2]s&sort=modtime&sortorder=desc) |\n", br.urlPrefix, url.QueryEscape(br.dir))
+	fmt.Fprintf(&buf, "| page name [↑](%[1]sbrowse?dir=%[2]s&sort=pagename) [↓](%[1]sbrowse?dir=%[2]s&sort=pagename&sortorder=desc) | last modified [↑](%[1]sbrowse?dir=%[2]s&sort=modtime) [↓](%[1]sbrowse?dir=%[2]s&sort=modtime&sortorder=desc) |\n", urlPrefix, url.QueryEscape(br.dir))
 	fmt.Fprintf(&buf, "|-----------|---------------|\n")
 	// TODO: link to .. if dir != ""
 	for _, line := range br.browseTable() {
 		buf.Write([]byte(line))
 	}
+	return buf.Bytes(), nil
+}
+
+func (b *bullServer) browse(w http.ResponseWriter, r *http.Request) error {
+	dir := r.FormValue("dir")
+	md, err := b.browseContent(
+		dir,
+		r.FormValue("sort"),
+		r.FormValue("sortorder"),
+		r.FormValue("directories"),
+	)
+	if err != nil {
+		return err
+	}
 	pg := &page{
 		Class:    "bull_gen_browse",
 		Exists:   true,
-		PageName: br.dir,
-		FileName: page2desired(br.dir),
-		Content:  buf.String(),
+		PageName: dir,
+		FileName: page2desired(dir),
+		Content:  string(md),
 		ModTime:  time.Now(),
 	}
 	if pg.PageName == "" {
 		pg.PageName = bullPrefix + "browse"
 	}
-	return b.renderMarkdown(w, r, pg, buf.Bytes())
+	return b.renderMarkdown(w, r, pg, md)
 }

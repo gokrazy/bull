@@ -8,6 +8,36 @@ function navModifierHeld(e) {
     return false;
 }
 
+// Add relative timestamps ("5m ago") to <time> elements in the browse table.
+(function() {
+    const now = new Date();
+    const times = document.querySelectorAll('.bull_gen_browse time[datetime]');
+    for (let i = 0; i < times.length; i++) {
+	const el = times[i];
+	const dt = new Date(el.getAttribute('datetime'));
+	const ago = now - dt;
+	if (Math.abs(ago) < 5000) {
+	    el.textContent += ' • just now';
+	    continue;
+	}
+	if (ago < 0 || ago >= 24 * 60 * 60 * 1000) {
+	    continue;
+	}
+	const seconds = Math.floor(ago / 1000);
+	const minutes = Math.floor(seconds / 60);
+	const hours = Math.floor(minutes / 60);
+	let text;
+	if (hours > 0) {
+	    text = hours + 'h ' + (minutes % 60) + 'm ago';
+	} else if (minutes > 0) {
+	    text = minutes + 'm ' + (seconds % 60) + 's ago';
+	} else {
+	    text = seconds + 's ago';
+	}
+	el.textContent += ' • ' + text;
+    }
+})();
+
 const rows = document.querySelectorAll('.bull_gen_browse tbody tr');
 var selected = 0;
 if (rows.length > 0) {

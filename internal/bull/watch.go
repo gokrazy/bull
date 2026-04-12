@@ -65,15 +65,66 @@ func maybeNotify(ctx context.Context, notify chan<- struct{}, fileName string) {
 	}
 }
 
-func (b *bullServer) handleWatchBrowse(w http.ResponseWriter, flusher http.Flusher, ctx context.Context) error {
+func (b *bullServer) browseContentHash(dir, sortby, sortorder, directories string) (string, error) {
+	md, err := b.browseContent(dir, sortby, sortorder, directories)
+	if err != nil {
+		return "", err
+	}
+	return hashSum(md), nil
+}
+
+func (b *bullServer) handleWatchBrowse(ctx context.Context, w http.ResponseWriter, flusher http.Flusher, r *http.Request) error {
+	dir := r.FormValue("dir")
+	sortby := r.FormValue("sort")
+	sortorder := r.FormValue("sortorder")
+	directories := r.FormValue("directories")
+	rhash := r.FormValue("hash")
+
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	initEventStream(w)
+
+	// Acquire the change channel before the hash check to avoid a
+	// TOCTOU gap: any change that occurs during or after hashing
+	// will be visible through this channel.
+	contentChanged := b.contentChangedCh()
+
+	// Catch up on changes that happened while disconnected
+	// (e.g. during page reload), analogous to the hash check
+	// in the regular page watcher.
+	if rhash != "" {
+		current, err := b.browseContentHash(dir, sortby, sortorder, directories)
+		if err != nil {
+			log.Printf("browseContentHash (initial): %v", err)
+		} else if current != rhash {
+			w.Write([]byte("data: {\"changed\":true}\n\n"))
+			flusher.Flush()
+			return nil
+		}
+	}
+
 	for {
-		contentChanged := b.contentChangedCh()
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-contentChanged:
+			// Re-acquire the channel for the next iteration before
+			// doing any work, so we don't miss changes that occur
+			// during hash computation.
+			contentChanged = b.contentChangedCh()
+
+			if rhash != "" {
+				// TODO: browseContentHash walks the entire content
+				// directory. Consider adding debounce or caching if
+				// this becomes a bottleneck with large wikis.
+				current, err := b.browseContentHash(dir, sortby, sortorder, directories)
+				if err != nil {
+					log.Printf("browseContentHash (watch loop): %v", err)
+					// On error, notify the client to reload rather than
+					// silently sitting idle.
+				} else if current == rhash {
+					continue // content didn't actually change for this view
+				}
+			}
 			w.Write([]byte("data: {\"changed\":true}\n\n"))
 			flusher.Flush()
 			return nil // client reloads and reconnects
@@ -91,7 +142,7 @@ func (b *bullServer) handleWatch(w http.ResponseWriter, r *http.Request) error {
 
 	pageName := pageFromURL(r)
 	if pageName == bullPrefix+"browse" {
-		return b.handleWatchBrowse(w, flusher, ctx)
+		return b.handleWatchBrowse(ctx, w, flusher, r)
 	}
 
 	possibilities := filesFromURL(r)

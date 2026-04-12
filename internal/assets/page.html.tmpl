@@ -37,7 +37,7 @@
   <script type="text/javascript">
     var u = new URL(document.URL);
     u.pathname = '{{ .URLBullPrefix }}watch/' + u.pathname.substr('{{ .URLPrefix }}'.length);
-    var params = new URLSearchParams();
+    var params = new URLSearchParams(u.search);
     params.set('hash', '{{ .ContentHash }}');
     u.search = params.toString();
     {{ if (eq .Watch "workaround") }}
@@ -58,6 +58,8 @@
       updates.onmessage = function(e) {
         //const update = JSON.parse(e.data)
         console.log('page changed:', e.data);
+        updates.close();
+        updates = undefined;
         location.reload();
       }
     }
@@ -101,7 +103,7 @@
   <script src="{{ .URLBullPrefix }}js/itasklist.js?cachebust={{ call .StaticHash "js/itasklist.js" }}" async></script>
   {{ end }}
   {{ if eq .Page.Class "bull_gen_browse" }}
-  <script src="{{ .URLBullPrefix }}js/browse.js?cachebust={{ call .StaticHash "js/browse.js" }}" async></script>
+  <script src="{{ .URLBullPrefix }}js/browse.js?cachebust={{ call .StaticHash "js/browse.js" }}" defer></script>
   {{ end }}
 
 </body>

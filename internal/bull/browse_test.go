@@ -8,51 +8,55 @@ import (
 )
 
 func TestBrowseTableLine(t *testing.T) {
-	now := time.Date(2026, 3, 22, 15, 0, 0, 0, time.UTC)
-
 	tests := []struct {
 		name    string
 		modTime time.Time
 		want    string
 	}{
 		{
-			name:    "seconds ago",
-			modTime: now.Add(-35 * time.Second),
-			want:    "| [[page]] | 2026-03-22 14:59:25 • Sun • 35s ago |\n",
+			name:    "recent timestamp",
+			modTime: time.Date(2026, 3, 22, 14, 59, 25, 0, time.UTC),
+			want:    "| [[page]] | <time datetime=\"2026-03-22T14:59:25Z\">2026-03-22 14:59:25 • Sun</time> |\n",
 		},
 		{
-			name:    "minutes and seconds ago",
-			modTime: now.Add(-5*time.Minute - 10*time.Second),
-			want:    "| [[page]] | 2026-03-22 14:54:50 • Sun • 5m 10s ago |\n",
+			name:    "older timestamp",
+			modTime: time.Date(2026, 3, 19, 15, 0, 0, 0, time.UTC),
+			want:    "| [[page]] | <time datetime=\"2026-03-19T15:00:00Z\">2026-03-19 15:00:00 • Thu</time> |\n",
 		},
 		{
-			name:    "hours and minutes ago",
-			modTime: now.Add(-3*time.Hour - 15*time.Minute),
-			want:    "| [[page]] | 2026-03-22 11:45:00 • Sun • 3h 15m ago |\n",
+			name:    "zero value time",
+			modTime: time.Time{},
+			want:    "| [[page]] | <time datetime=\"0001-01-01T00:00:00Z\">0001-01-01 00:00:00 • Mon</time> |\n",
 		},
 		{
-			name:    "exactly 24h ago (no relative)",
-			modTime: now.Add(-24 * time.Hour),
-			want:    "| [[page]] | 2026-03-21 15:00:00 • Sat |\n",
+			name:    "non-UTC timezone normalized to RFC3339",
+			modTime: time.Date(2026, 6, 15, 10, 30, 0, 0, time.FixedZone("CET", 3600)),
+			want:    "| [[page]] | <time datetime=\"2026-06-15T10:30:00+01:00\">2026-06-15 10:30:00 • Mon</time> |\n",
 		},
 		{
-			name:    "older than 24h (no relative)",
-			modTime: now.Add(-72 * time.Hour),
-			want:    "| [[page]] | 2026-03-19 15:00:00 • Thu |\n",
-		},
-		{
-			name:    "just now (0s ago)",
-			modTime: now,
-			want:    "| [[page]] | 2026-03-22 15:00:00 • Sun • 0s ago |\n",
+			name:    "midnight boundary",
+			modTime: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+			want:    "| [[page]] | <time datetime=\"2026-01-01T00:00:00Z\">2026-01-01 00:00:00 • Thu</time> |\n",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := browseTableLine("[[page]]", tt.modTime, now)
+			got := browseTableLine("[[page]]", tt.modTime)
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("browseTableLine() mismatch (-want +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestBrowseTableLineDeterministic(t *testing.T) {
+	// browseTableLine must produce identical output for the same input,
+	// regardless of when it is called. This is required for content hashing.
+	modTime := time.Date(2026, 3, 22, 14, 59, 25, 0, time.UTC)
+	first := browseTableLine("[[page]]", modTime)
+	second := browseTableLine("[[page]]", modTime)
+	if first != second {
+		t.Errorf("browseTableLine is not deterministic:\n  first:  %q\n  second: %q", first, second)
 	}
 }
