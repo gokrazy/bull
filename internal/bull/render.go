@@ -18,6 +18,7 @@ import (
 	"github.com/gokrazy/bull/internal/itasklist"
 	"github.com/gokrazy/bull/internal/linkify"
 	"github.com/gokrazy/bull/internal/mermaid"
+	"github.com/gokrazy/bull/internal/wikilinkpipe"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
@@ -66,6 +67,7 @@ func (b *bullServer) converter(pg *page) goldmark.Markdown {
 				contentRoot: b.content,
 			},
 		},
+		wikilinkpipe.Extender{},
 		&hashtag.Extender{
 			URLBullPrefix: b.URLBullPrefix(),
 		},
@@ -96,7 +98,7 @@ func (b *bullServer) parseMD(pg *page, md string) ast.Node {
 	doc := converter.Parser().Parse(text.NewReader(source))
 
 	// Make the URL protocol default to http:// for naked links
-	// like go.dev/cl/641655
+	// like go.dev/cl/641655.
 	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if !entering {
 			return ast.WalkContinue, nil

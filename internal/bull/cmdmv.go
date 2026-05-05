@@ -35,7 +35,7 @@ func (b *bullServer) replaceLinks(linker, oldpg, newpg string) error {
 	if err != nil {
 		return err
 	}
-	pb = bytes.ReplaceAll(pb, []byte("[["+oldpg+"]]"), []byte("[["+newpg+"]]"))
+	pb = replaceWikilinkTargets(pb, oldpg, newpg)
 	f, err = b.content.OpenFile(linker, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		return err
@@ -48,6 +48,75 @@ func (b *bullServer) replaceLinks(linker, oldpg, newpg string) error {
 		return err
 	}
 	return nil
+}
+
+// replaceWikilinkTargets rewrites every [[oldpg…]] / ![[oldpg…]] in src to use
+// newpg as the target, preserving any fragment, label, and the GFM table-cell
+// pipe escape ('\|'). Forms handled:
+//
+//	[[oldpg]]
+//	[[oldpg|label]]
+//	[[oldpg\|label]]   (table-escaped form)
+//	[[oldpg#frag]]
+//	[[oldpg#frag|label]]
+//	![[oldpg…]]        (embed)
+func replaceWikilinkTargets(src []byte, oldpg, newpg string) []byte {
+	var out bytes.Buffer
+	out.Grow(len(src))
+	for i := 0; i < len(src); {
+		var prefix int
+		switch {
+		case i+1 < len(src) && src[i] == '[' && src[i+1] == '[':
+			prefix = 2
+		case i+2 < len(src) && src[i] == '!' && src[i+1] == '[' && src[i+2] == '[':
+			prefix = 3
+		default:
+			out.WriteByte(src[i])
+			i++
+			continue
+		}
+		contentStart := i + prefix
+		closeRel := bytes.Index(src[contentStart:], []byte("]]"))
+		if closeRel < 0 {
+			out.WriteByte(src[i])
+			i++
+			continue
+		}
+		contentEnd := contentStart + closeRel
+		inner := src[contentStart:contentEnd]
+		target, consumed := parseWikilinkTarget(inner)
+		if string(target) == oldpg {
+			out.Write(src[i:contentStart])
+			out.WriteString(newpg)
+			out.Write(inner[consumed:])
+			out.WriteString("]]")
+		} else {
+			out.Write(src[i : contentEnd+2])
+		}
+		i = contentEnd + 2
+	}
+	return out.Bytes()
+}
+
+// parseWikilinkTarget returns the page-name portion of a wikilink's inner
+// content (the bytes between "[[" and "]]") and the number of bytes that
+// belong to it in the source. It mirrors the wikilink parser: split on the
+// first '|' (the label separator), then on the last '#' (the fragment).
+// A trailing '\' on the page name (the GFM table-cell pipe escape) is
+// stripped, but only when a '|' was actually consumed — otherwise a target
+// that legitimately ends in '\' would be silently truncated.
+func parseWikilinkTarget(inner []byte) (target []byte, consumed int) {
+	beforePipe := inner
+	if pipe := bytes.IndexByte(inner, '|'); pipe >= 0 {
+		beforePipe = inner[:pipe]
+		if len(beforePipe) > 1 && beforePipe[len(beforePipe)-1] == '\\' {
+			beforePipe = beforePipe[:len(beforePipe)-1]
+		}
+	}
+	if hash := bytes.LastIndexByte(beforePipe, '#'); hash >= 0 {
+		return beforePipe[:hash], hash
+	}
+	return beforePipe, len(beforePipe)
 }
 
 func mv(args []string) error {
