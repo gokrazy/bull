@@ -52,6 +52,7 @@ func newTestServer(t *testing.T) *bullTestServer {
 	// TODO: unify handler registration between cmdserve.go and here
 	mux.Handle("GET /{page...}", handleError(bull.handleRender))
 	mux.Handle("POST "+urlBullPrefix+"save/{page...}", handleError(bull.save))
+	mux.Handle("POST "+urlBullPrefix+"upload/{page...}", handleError(bull.upload))
 	return &bullTestServer{
 		tmp: tmp,
 		srv: httptest.NewServer(mux),

@@ -29,6 +29,9 @@
 
   <!-- Pull in the CodeMirror JavaScript editor component: -->
   <script type="text/javascript">
+    const BullURLPrefix = `{{ .URLPrefix }}`;
+    const BullURLBullPrefix = `{{ .URLBullPrefix }}`;
+    const BullPageName = `{{ .Page.PageName }}`;
     const BullMarkdown = `{{ .MarkdownContent }}`;
   </script>
   <script type="text/javascript" src="{{ .URLBullPrefix }}js/bull-codemirror.bundle.js?cachebust={{ call .StaticHashCodeMirror }}"></script>
