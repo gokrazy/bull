@@ -3,7 +3,6 @@ package bull
 import (
 	"bytes"
 	"net/http"
-	"net/http/httptest"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -14,51 +13,14 @@ import (
 )
 
 func TestSave(t *testing.T) {
-	tmp := t.TempDir()
-
-	if err := os.WriteFile(filepath.Join(tmp, "foo.md"), []byte("hello\nworld\n"), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	content, err := os.OpenRoot(tmp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	cs, err := loadContentSettings(content)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	idxReady := make(chan struct{})
-	close(idxReady)
-	bull := &bullServer{
-		root:            "/",
-		content:         content,
-		contentDir:      tmp,
-		contentSettings: cs,
-		editor:          "textarea",
-		contentChanged:  make(chan struct{}),
-		idxReady:        idxReady,
-	}
-	bull.idx.Store(&idx{})
-	if err := bull.init(); err != nil {
-		t.Fatal(err)
-	}
-	// TODO: refactor the registration between cmdserve.go and here
-	urlBullPrefix := bull.URLBullPrefix()
-	mux := http.NewServeMux()
-	mux.Handle("GET /{page...}", handleError(bull.handleRender))
-	mux.Handle("POST "+urlBullPrefix+"save/{page...}", handleError(bull.save))
-
-	testsrv := httptest.NewServer(mux)
-	cl := testsrv.Client()
+	testsrv := newTestServer(t)
+	cl := testsrv.srv.Client()
 
 	// Ensure we use \n line endings, see issue #15.
 	{
 		form := url.Values{}
 		form.Set("markdown", "hello\r\nworld\r\nanother line\r\n")
-		req, err := http.NewRequest("POST", testsrv.URL+"/_bull/save/foo", strings.NewReader(form.Encode()))
+		req, err := http.NewRequest("POST", testsrv.srv.URL+"/_bull/save/foo", strings.NewReader(form.Encode()))
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 		if err != nil {
 			t.Fatal(err)
@@ -71,7 +33,7 @@ func TestSave(t *testing.T) {
 			t.Errorf("POST /_bull/save/foo: unexpected HTTP status: got %v, want %v", resp.Status, want)
 		}
 	}
-	got, err := os.ReadFile(filepath.Join(tmp, "foo.md"))
+	got, err := os.ReadFile(filepath.Join(testsrv.tmp, "foo.md"))
 	if err != nil {
 		t.Fatal(err)
 	}

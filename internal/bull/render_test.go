@@ -3,7 +3,6 @@ package bull
 import (
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -11,14 +10,12 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/tools/txtar"
 )
 
 var hrefRe = regexp.MustCompile(`href="([^"]+)"`)
 
 func TestRender(t *testing.T) {
-	tmp := t.TempDir()
-	archive := txtar.Parse([]byte(`
+	const archive = `
 -- test.md --
 hello world
 
@@ -44,43 +41,15 @@ URL with trailing period: https://example.com/trailing.
 
 -- maybe consider?.md --
 something profound
-`))
-	for _, f := range archive.Files {
-		fn := filepath.Join(tmp, f.Name)
-		if err := os.WriteFile(fn, f.Data, 0644); err != nil {
-			t.Fatal(err)
-		}
-	}
-	content, err := os.OpenRoot(tmp)
-	if err != nil {
-		t.Fatal(err)
-	}
-	cs, err := loadContentSettings(content)
-	if err != nil {
-		t.Fatal(err)
-	}
-	idxReady := make(chan struct{})
-	close(idxReady)
-	bull := &bullServer{
-		root:            "/",
-		content:         content,
-		contentDir:      tmp,
-		contentSettings: cs,
-		idxReady:        idxReady,
-	}
-	bull.idx.Store(&idx{})
-	if err := bull.init(); err != nil {
-		t.Fatal(err)
-	}
+`
 
-	// TODO: refactor the registration between bull.go and here
-	mux := http.NewServeMux()
-	mux.Handle("/{page...}", handleError(bull.handleRender))
-
-	testsrv := httptest.NewServer(mux)
-	cl := testsrv.Client()
+	testsrv := newTestServer(t)
+	if err := testsrv.unpackTxTar([]byte(archive)); err != nil {
+		t.Fatal(err)
+	}
+	cl := testsrv.srv.Client()
 	{
-		resp, err := cl.Get(testsrv.URL + "/")
+		resp, err := cl.Get(testsrv.srv.URL + "/")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -89,7 +58,7 @@ something profound
 		}
 	}
 	{
-		resp, err := cl.Get(testsrv.URL + "/test")
+		resp, err := cl.Get(testsrv.srv.URL + "/test")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -158,7 +127,7 @@ something profound
 		}
 
 		// Verify the link works
-		resp, err = cl.Get(testsrv.URL + want)
+		resp, err = cl.Get(testsrv.srv.URL + want)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -177,6 +146,8 @@ something profound
 }
 
 func TestWikilinkLabels(t *testing.T) {
+	testsrv := newTestServer(t)
+
 	tests := []struct {
 		name        string
 		md          string
@@ -315,40 +286,16 @@ func TestWikilinkLabels(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tmp := t.TempDir()
-			if err := os.WriteFile(filepath.Join(tmp, "test.md"), []byte(tt.md), 0644); err != nil {
+			if err := os.WriteFile(filepath.Join(testsrv.tmp, "test.md"), []byte(tt.md), 0644); err != nil {
 				t.Fatal(err)
 			}
-			content, err := os.OpenRoot(tmp)
-			if err != nil {
-				t.Fatal(err)
-			}
-			cs, err := loadContentSettings(content)
-			if err != nil {
-				t.Fatal(err)
-			}
-			idxReady := make(chan struct{})
-			close(idxReady)
-			bull := &bullServer{
-				root:            "/",
-				content:         content,
-				contentDir:      tmp,
-				contentSettings: cs,
-				idxReady:        idxReady,
-			}
-			bull.idx.Store(&idx{})
-			if err := bull.init(); err != nil {
-				t.Fatal(err)
-			}
-			mux := http.NewServeMux()
-			mux.Handle("GET /{page...}", handleError(bull.handleRender))
-			testsrv := httptest.NewServer(mux)
-			req, err := http.NewRequest("GET", testsrv.URL+"/test", nil)
+
+			req, err := http.NewRequest("GET", testsrv.srv.URL+"/test", nil)
 			if err != nil {
 				t.Fatal(err)
 			}
 			req.Header.Set("Accept", "text/markdown")
-			resp, err := testsrv.Client().Do(req)
+			resp, err := testsrv.srv.Client().Do(req)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -381,47 +328,18 @@ func TestWikilinkLabels(t *testing.T) {
 }
 
 func TestLinkify(t *testing.T) {
-	tmp := t.TempDir()
-	archive := txtar.Parse([]byte("\n" +
+	const archive = "\n" +
 		"-- test.md --\n" +
 		"* e.g. Emacs with TRAMP: `emacs /ssh:scan2drive:/perm/keep/index.md` ([braucht ein /bin in gokrazy](https://github.com/gokrazy/tools/commit/37e2f95c5cfc58554405cc615c5da8e4899b071a))\n" +
-		"* relocatable! e.g. serve opaque-preview with `--root=/go.dev/` and `--root=/protobuf.dev/`\n"))
-	for _, f := range archive.Files {
-		fn := filepath.Join(tmp, f.Name)
-		if err := os.WriteFile(fn, f.Data, 0644); err != nil {
-			t.Fatal(err)
-		}
-	}
-	content, err := os.OpenRoot(tmp)
-	if err != nil {
-		t.Fatal(err)
-	}
-	cs, err := loadContentSettings(content)
-	if err != nil {
-		t.Fatal(err)
-	}
-	idxReady := make(chan struct{})
-	close(idxReady)
-	bull := &bullServer{
-		root:            "/",
-		content:         content,
-		contentDir:      tmp,
-		contentSettings: cs,
-		idxReady:        idxReady,
-	}
-	bull.idx.Store(&idx{})
-	if err := bull.init(); err != nil {
-		t.Fatal(err)
-	}
+		"* relocatable! e.g. serve opaque-preview with `--root=/go.dev/` and `--root=/protobuf.dev/`\n"
 
-	// TODO: refactor the registration between cmdserve.go and here
-	mux := http.NewServeMux()
-	mux.Handle("GET /{page...}", handleError(bull.handleRender))
-
-	testsrv := httptest.NewServer(mux)
-	cl := testsrv.Client()
+	testsrv := newTestServer(t)
+	if err := testsrv.unpackTxTar([]byte(archive)); err != nil {
+		t.Fatal(err)
+	}
+	cl := testsrv.srv.Client()
 	{
-		resp, err := cl.Get(testsrv.URL + "/")
+		resp, err := cl.Get(testsrv.srv.URL + "/")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -430,7 +348,7 @@ func TestLinkify(t *testing.T) {
 		}
 	}
 	{
-		req, err := http.NewRequest("GET", testsrv.URL+"/test?format=markdown", nil)
+		req, err := http.NewRequest("GET", testsrv.srv.URL+"/test?format=markdown", nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -447,10 +365,12 @@ func TestLinkify(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		want := `<ul>
+		want := `<form class="itasklist" action="/_bull/_itasklist/test" method="POST">
+<ul>
 <li>e.g. Emacs with TRAMP: <code>emacs /ssh:scan2drive:/perm/keep/index.md</code> (<a href="https://github.com/gokrazy/tools/commit/37e2f95c5cfc58554405cc615c5da8e4899b071a">braucht ein /bin in gokrazy</a>)</li>
 <li>relocatable! e.g. serve opaque-preview with <code>--root=/go.dev/</code> and <code>--root=/protobuf.dev/</code></li>
 </ul>
+</form>
 `
 		got := string(b)
 		if diff := cmp.Diff(want, got); diff != "" {
