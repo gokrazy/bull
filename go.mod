@@ -1,6 +1,6 @@
 module github.com/gokrazy/bull
 
-go 1.26
+go 1.26.0
 
 require (
 	github.com/BurntSushi/toml v1.6.0
@@ -27,7 +27,7 @@ require (
 	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/term v0.44.0 // indirect
 	golang.org/x/text v0.38.0 // indirect
-	honnef.co/go/tools v0.7.0 // indirect
+	honnef.co/go/tools v0.8.0-rc.1 // indirect
 )
 
 tool (
