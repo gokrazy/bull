@@ -8,8 +8,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
-    "moduleResolution": "node",
-    "baseUrl": "./third_party/codemirror/node_modules",
+    "paths": {"*": ["./third_party/codemirror/node_modules/*"]},
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true

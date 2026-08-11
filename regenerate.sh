@@ -30,8 +30,8 @@ then
     exit 2
 fi
 
-# Run tsc (TypeScript compiler) for type-checking
-tsc --noEmit
+# Run tsgo (TypeScript compiler, Go implementation) for type-checking
+go tool tsgo --noEmit
 
 # Bundle npm dependencies (and TypeScript code)
 export NODE_PATH=$PWD/third_party/codemirror/node_modules

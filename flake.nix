@@ -19,12 +19,12 @@
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             go
-            typescript
+            typescript-go
             typescript-language-server
           ];
 
           shellHook = ''
-            echo "Nix-based bull dev env (go: $(go version), tsc: $(tsc --version))"
+            echo "Nix-based bull dev env (go: $(go version), tsgo: $(tsgo --version))"
           '';
         };
       }
