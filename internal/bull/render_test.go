@@ -286,7 +286,7 @@ func TestWikilinkLabels(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := os.WriteFile(filepath.Join(testsrv.tmp, "test.md"), []byte(tt.md), 0644); err != nil {
+			if err := os.WriteFile(filepath.Join(testsrv.tmp, "test.md"), []byte(tt.md), 0o666); err != nil {
 				t.Fatal(err)
 			}
 

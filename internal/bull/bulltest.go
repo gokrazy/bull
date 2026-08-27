@@ -18,7 +18,7 @@ type bullTestServer struct {
 func newTestServer(t *testing.T) *bullTestServer {
 	tmp := t.TempDir()
 
-	if err := os.WriteFile(filepath.Join(tmp, "foo.md"), []byte("hello\nworld\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmp, "foo.md"), []byte("hello\nworld\n"), 0o666); err != nil {
 		t.Fatal(err)
 	}
 
@@ -63,7 +63,7 @@ func (ts *bullTestServer) unpackTxTar(contents []byte) error {
 	archive := txtar.Parse(contents)
 	for _, f := range archive.Files {
 		fn := filepath.Join(ts.tmp, f.Name)
-		if err := os.WriteFile(fn, f.Data, 0644); err != nil {
+		if err := os.WriteFile(fn, f.Data, 0o666); err != nil {
 			return err
 		}
 	}

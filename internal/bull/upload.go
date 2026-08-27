@@ -28,7 +28,7 @@ func (b *bullServer) upload(w http.ResponseWriter, r *http.Request) error {
 
 	_, err := b.content.Stat(dir)
 	if os.IsNotExist(err) {
-		if err := mkdirAll(b.content, dir, 0755); err != nil {
+		if err := mkdirAll(b.content, dir, 0o777); err != nil {
 			return err
 		}
 	} else if err != nil {
@@ -65,7 +65,7 @@ func (b *bullServer) upload(w http.ResponseWriter, r *http.Request) error {
 		if attempt > 1 {
 			destFn = fmt.Sprintf("%s_%03d%s", strings.TrimSuffix(destFnBase, ext), attempt, ext)
 		}
-		f, err := b.content.OpenFile(destFn, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
+		f, err := b.content.OpenFile(destFn, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o666)
 		if err != nil {
 			if os.IsExist(err) {
 				// Some other upload raced us for this file, try another name.

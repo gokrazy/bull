@@ -77,7 +77,7 @@ func (b *bullServer) renameAPI(w http.ResponseWriter, r *http.Request) error {
 
 	oldpath := filepath.Join(b.contentDir, pg.FileName)
 	newpath := filepath.Join(b.contentDir, dest)
-	if err := mkdirAll(b.content, filepath.Dir(dest), 0755); err != nil {
+	if err := mkdirAll(b.content, filepath.Dir(dest), 0o777); err != nil {
 		return err
 	}
 	if err := os.Rename(oldpath, newpath); err != nil {

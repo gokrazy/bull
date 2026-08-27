@@ -14,10 +14,10 @@ func newTestBull(t *testing.T, files map[string]string) *bullServer {
 	tmp := t.TempDir()
 	for name, content := range files {
 		dir := filepath.Dir(filepath.Join(tmp, name))
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0o777); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(filepath.Join(tmp, name), []byte(content), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(tmp, name), []byte(content), 0o666); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -136,7 +136,7 @@ func TestUpdateIndex(t *testing.T) {
 	// Simulate editing alpha to link to gamma instead of beta.
 	if err := os.WriteFile(
 		filepath.Join(b.contentDir, "alpha.md"),
-		[]byte("see [[gamma]]"), 0644); err != nil {
+		[]byte("see [[gamma]]"), 0o666); err != nil {
 		t.Fatal(err)
 	}
 	pg, err := b.read("alpha.md")
@@ -177,7 +177,7 @@ func TestUpdateIndexPageCount(t *testing.T) {
 	// Add a new page.
 	if err := os.WriteFile(
 		filepath.Join(b.contentDir, "three.md"),
-		[]byte("new page"), 0644); err != nil {
+		[]byte("new page"), 0o666); err != nil {
 		t.Fatal(err)
 	}
 	pg, err := b.read("three.md")

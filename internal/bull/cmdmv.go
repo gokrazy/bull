@@ -189,7 +189,7 @@ func mv(args []string) error {
 	if !*dryRun {
 		oldpath := filepath.Join(bull.contentDir, pg.FileName)
 		newpath := filepath.Join(bull.contentDir, dest)
-		if err := mkdirAll(bull.content, filepath.Dir(dest), 0755); err != nil {
+		if err := mkdirAll(bull.content, filepath.Dir(dest), 0o777); err != nil {
 			return err
 		}
 		if err := os.Rename(oldpath, newpath); err != nil {

@@ -21,7 +21,7 @@ func TestHandleContentEventWrite(t *testing.T) {
 	b.idx.Store(idx)
 
 	// Overwrite alpha to link to gamma instead.
-	if err := os.WriteFile(filepath.Join(b.contentDir, "alpha.md"), []byte("see [[gamma]]"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(b.contentDir, "alpha.md"), []byte("see [[gamma]]"), 0o666); err != nil {
 		t.Fatal(err)
 	}
 
@@ -93,7 +93,7 @@ func TestHandleContentEventNonMarkdown(t *testing.T) {
 	b.idx.Store(idx)
 
 	// Write a non-markdown file.
-	if err := os.WriteFile(filepath.Join(b.contentDir, "photo.jpg"), []byte("fake"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(b.contentDir, "photo.jpg"), []byte("fake"), 0o666); err != nil {
 		t.Fatal(err)
 	}
 
@@ -158,10 +158,10 @@ func TestHandleContentEventCreateDir(t *testing.T) {
 
 	// Create a subdirectory with a markdown file already in it.
 	subdir := filepath.Join(b.contentDir, "sub")
-	if err := os.Mkdir(subdir, 0755); err != nil {
+	if err := os.Mkdir(subdir, 0o777); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(subdir, "page.md"), []byte("see [[alpha]]"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(subdir, "page.md"), []byte("see [[alpha]]"), 0o666); err != nil {
 		t.Fatal(err)
 	}
 

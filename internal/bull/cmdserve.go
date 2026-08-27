@@ -99,7 +99,7 @@ func (c *Customization) serve(args []string) error {
 		}
 		// Interpret the user starting bull with a certain --content flag to
 		// mean that the directory should be created if it does not exist.
-		if err := os.MkdirAll(*contentDir, 0755); err != nil {
+		if err := os.MkdirAll(*contentDir, 0o777); err != nil {
 			return err
 		}
 		content, err = os.OpenRoot(*contentDir)
